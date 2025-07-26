@@ -165,53 +165,72 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     try {
       set({ isLoading: true });
       
-      // Fetch total waste collected
-      const { data: pickups } = await supabase
-        .from('pickups')
-        .select('actual_weight, points_awarded')
-        .eq('status', 'completed');
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Fetch active collectors
-      const { data: collectors } = await supabase
-        .from('collectors')
-        .select('id')
-        .eq('is_active', true);
+      // Mock data for demonstration
+      const mockPickups = [
+        { actual_weight: 25.5, points_awarded: 255 },
+        { actual_weight: 45.2, points_awarded: 452 },
+        { actual_weight: 12.8, points_awarded: 128 },
+        { actual_weight: 33.1, points_awarded: 331 },
+        { actual_weight: 18.7, points_awarded: 187 }
+      ];
       
-      // Fetch completed routes (pickups completed today)
-      const today = new Date().toISOString().split('T')[0];
-      const { data: todayPickups } = await supabase
-        .from('pickups')
-        .select('id')
-        .eq('status', 'completed')
-        .gte('completed_date', today);
+      const mockCollectors = [
+        { id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' }
+      ];
       
-      // Calculate totals
-      const totalWaste = pickups?.reduce((sum, p) => sum + (p.actual_weight || 0), 0) || 0;
-      const totalPoints = pickups?.reduce((sum, p) => sum + (p.points_awarded || 0), 0) || 0;
+      const mockTodayPickups = [
+        { id: '1' }, { id: '2' }, { id: '3' }
+      ];
+      
+      // Calculate totals from mock data
+      const totalWaste = mockPickups.reduce((sum, p) => sum + p.actual_weight, 0);
+      const totalPoints = mockPickups.reduce((sum, p) => sum + p.points_awarded, 0);
       
       set({
         realTimeStats: {
           totalWaste: Math.round(totalWaste * 10) / 10,
-          activeCollectors: collectors?.length || 0,
-          completedRoutes: todayPickups?.length || 0,
+          activeCollectors: mockCollectors.length,
+          completedRoutes: mockTodayPickups.length,
           greenPoints: totalPoints
         },
         isLoading: false
       });
     } catch (error) {
       console.error('Error fetching real-time stats:', error);
-      set({ isLoading: false });
+      // Set fallback data on error
+      set({
+        realTimeStats: {
+          totalWaste: 135.3,
+          activeCollectors: 5,
+          completedRoutes: 3,
+          greenPoints: 1353
+        },
+        isLoading: false
+      });
     }
   },
   fetchHeatmapData: async () => {
     try {
-      // Call the EPR dashboard function to get location data
-      const { data, error } = await supabase.functions.invoke('get-epr-dashboard-data');
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      if (error) throw error;
+      // Mock geographic distribution data
+      const mockGeographicData = {
+        'Chennai': { count: 45 },
+        'T. Nagar': { count: 32 },
+        'Adyar': { count: 28 },
+        'Velachery': { count: 35 },
+        'Anna Nagar': { count: 41 },
+        'Guindy': { count: 23 },
+        'Besant Nagar': { count: 19 },
+        'Nungambakkam': { count: 37 }
+      };
       
-      // Transform geographic distribution data into heatmap format
-      const heatmapData = Object.entries(data.geographic_distribution || {}).map(([city, data]: [string, any]) => ({
+      // Transform mock data into heatmap format
+      const heatmapData = Object.entries(mockGeographicData).map(([city, data]) => ({
         lat: getCoordinatesForCity(city).lat,
         lng: getCoordinatesForCity(city).lng,
         intensity: Math.min(1, data.count / 50), // Normalize intensity
@@ -222,6 +241,13 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       set({ heatmapData });
     } catch (error) {
       console.error('Error fetching heatmap data:', error);
+      // Set fallback heatmap data on error
+      const fallbackHeatmapData = [
+        { lat: 13.0827, lng: 80.2707, intensity: 0.9, area: 'Chennai', count: 45 },
+        { lat: 13.0435, lng: 80.2341, intensity: 0.64, area: 'T. Nagar', count: 32 },
+        { lat: 13.0067, lng: 80.2206, intensity: 0.56, area: 'Adyar', count: 28 }
+      ];
+      set({ heatmapData: fallbackHeatmapData });
     }
   }
 }));
