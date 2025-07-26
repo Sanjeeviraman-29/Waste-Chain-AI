@@ -16,6 +16,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import AddCollectorModal from '../collectors/AddCollectorModal';
 
 interface Collector {
   id: string;
@@ -37,13 +38,6 @@ const CollectorManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedCollector, setSelectedCollector] = useState<Collector | null>(null);
-  const [newCollector, setNewCollector] = useState({
-    collector_name: '',
-    phone: '',
-    vehicle_type: '',
-    license_plate: '',
-    service_areas: [] as string[]
-  });
 
   useEffect(() => {
     fetchCollectors();
@@ -66,26 +60,8 @@ const CollectorManagement: React.FC = () => {
     }
   };
 
-  const handleAddCollector = async () => {
-    try {
-      const { error } = await supabase
-        .from('collectors')
-        .insert([newCollector]);
-
-      if (error) throw error;
-
-      setShowAddModal(false);
-      setNewCollector({
-        collector_name: '',
-        phone: '',
-        vehicle_type: '',
-        license_plate: '',
-        service_areas: []
-      });
-      fetchCollectors();
-    } catch (error) {
-      console.error('Error adding collector:', error);
-    }
+  const handleAddSuccess = () => {
+    fetchCollectors(); // Refresh the collectors list
   };
 
   const toggleCollectorStatus = async (id: string, currentStatus: boolean) => {
@@ -299,83 +275,11 @@ const CollectorManagement: React.FC = () => {
       </div>
 
       {/* Add Collector Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl p-6 w-full max-w-md mx-4"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Collector</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={newCollector.collector_name}
-                  onChange={(e) => setNewCollector(prev => ({ ...prev, collector_name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input
-                  type="tel"
-                  value={newCollector.phone}
-                  onChange={(e) => setNewCollector(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
-                <select
-                  value={newCollector.vehicle_type}
-                  onChange={(e) => setNewCollector(prev => ({ ...prev, vehicle_type: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="">Select vehicle type</option>
-                  <option value="Motorcycle">Motorcycle</option>
-                  <option value="Van">Van</option>
-                  <option value="Truck">Truck</option>
-                  <option value="Bicycle">Bicycle</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">License Plate</label>
-                <input
-                  type="text"
-                  value={newCollector.license_plate}
-                  onChange={(e) => setNewCollector(prev => ({ ...prev, license_plate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-3 mt-6">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleAddCollector}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
-              >
-                Add Collector
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowAddModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-              >
-                Cancel
-              </motion.button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      <AddCollectorModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={handleAddSuccess}
+      />
     </motion.div>
   );
 };
