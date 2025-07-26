@@ -1,0 +1,54 @@
+{
+  "dashboard": {
+    "title": "WasteChain AI Dashboard",
+    "welcome": "Welcome back",
+    "overview": "Overview",
+    "analytics": "Analytics",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "widgets": {
+    "collectionOverview": "Collection Overview",
+    "wasteTrends": "Waste Collection Trends",
+    "heatmap": "Collection Heatmap",
+    "dataExplorer": "Data Explorer"
+  },
+  "stats": {
+    "totalWaste": "Total Waste Collected",
+    "activeCollectors": "Active Collectors",
+    "completedRoutes": "Completed Routes",
+    "greenPoints": "Green Points Earned"
+  },
+  "filters": {
+    "dateRange": "Date Range",
+    "wasteType": "Waste Type",
+    "status": "Status",
+    "location": "Location",
+    "apply": "Apply Filters",
+    "clear": "Clear"
+  },
+  "wasteTypes": {
+    "organic": "Organic",
+    "plastic": "Plastic",
+    "paper": "Paper",
+    "electronic": "Electronic",
+    "hazardous": "Hazardous"
+  },
+  "status": {
+    "pending": "Pending",
+    "collected": "Collected",
+    "processed": "Processed"
+  },
+  "exports": {
+    "pdf": "Export PDF",
+    "csv": "Export CSV",
+    "excel": "Export Excel"
+  },
+  "reports": {
+    "title": "EPR Compliance Reports",
+    "generate": "Generate Report",
+    "download": "Download",
+    "compliance": "Compliance Status",
+    "environmental": "Environmental Impact"
+  }
+}

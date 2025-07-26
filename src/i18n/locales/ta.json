@@ -1,0 +1,54 @@
+{
+  "dashboard": {
+    "title": "வேஸ்ட்சேன் AI டாஷ்போர்டு",
+    "welcome": "மீண்டும் வரவேற்கிறோம்",
+    "overview": "மேலோட்டம்",
+    "analytics": "பகுப்பாய்வு",
+    "reports": "அறிக்கைகள்",
+    "settings": "அமைப்புகள்"
+  },
+  "widgets": {
+    "collectionOverview": "சேகரிப்பு மேலோட்டம்",
+    "wasteTrends": "கழிவு சேகரிப்பு போக்குகள்",
+    "heatmap": "சேகரிப்பு வெப்ப வரைபடம்",
+    "dataExplorer": "தரவு ஆய்வாளர்"
+  },
+  "stats": {
+    "totalWaste": "மொத்த சேகரிக்கப்பட்ட கழிவு",
+    "activeCollectors": "செயலில் உள்ள சேகரிப்பாளர்கள்",
+    "completedRoutes": "முடிக்கப்பட்ட வழித்தடங்கள்",
+    "greenPoints": "பெற்ற பசுமை புள்ளிகள்"
+  },
+  "filters": {
+    "dateRange": "தேதி வரம்பு",
+    "wasteType": "கழிவு வகை",
+    "status": "நிலை",
+    "location": "இடம்",
+    "apply": "வடிகட்டிகளை பயன்படுத்து",
+    "clear": "அழிக்க"
+  },
+  "wasteTypes": {
+    "organic": "கரிம",
+    "plastic": "பிளாஸ்டிக்",
+    "paper": "காகிதம்",
+    "electronic": "மின்னணு",
+    "hazardous": "ஆபத்தான"
+  },
+  "status": {
+    "pending": "நிலுவையில்",
+    "collected": "சேகரிக்கப்பட்டது",
+    "processed": "செயலாக்கப்பட்டது"
+  },
+  "exports": {
+    "pdf": "PDF ஏற்றுமதி",
+    "csv": "CSV ஏற்றுமதி",
+    "excel": "Excel ஏற்றுமதி"
+  },
+  "reports": {
+    "title": "EPR இணக்க அறிக்கைகள்",
+    "generate": "அறிக்கை உருவாக்க",
+    "download": "பதிவிறக்கம்",
+    "compliance": "இணக்க நிலை",
+    "environmental": "சுற்றுச்சூழல் தாக்கம்"
+  }
+}
