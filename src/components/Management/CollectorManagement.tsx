@@ -79,12 +79,23 @@ const CollectorManagement: React.FC = () => {
 
   const toggleCollectorStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('collectors')
-        .update({ is_active: !currentStatus })
-        .eq('id', id);
+      if (shouldUseMockData()) {
+        console.log('Using mock data service (Supabase not configured)');
+        const { error } = await mockDataService.updateCollectorStatus(id, !currentStatus);
+        if (error) throw error;
+      } else {
+        if (!supabase) {
+          throw new Error('Supabase client not available');
+        }
 
-      if (error) throw error;
+        const { error } = await supabase
+          .from('collectors')
+          .update({ is_active: !currentStatus })
+          .eq('id', id);
+
+        if (error) throw error;
+      }
+
       fetchCollectors();
     } catch (error) {
       console.error('Error updating collector status:', error);
