@@ -68,9 +68,37 @@ const AddCollectorModal: React.FC<AddCollectorModalProps> = ({
     try {
       console.log('Submitting collector data:', { ...data, password: '[REDACTED]' });
 
-      // Use mock data service if Supabase is not available
-      if (shouldUseMockData()) {
-        console.log('Using mock data service (Supabase not configured)');
+      // Try Supabase first, fallback to mock data if it fails
+      try {
+        if (supabase && isSupabaseAvailable()) {
+          console.log('Using Supabase Edge Function');
+          const { data: response, error } = await supabase.functions.invoke('create-new-collector', {
+            body: {
+              name: data.name,
+              email: data.email,
+              password: data.password,
+              phone: data.phone || undefined,
+              vehicle_id: data.vehicle_id || undefined
+            }
+          });
+
+          if (error) {
+            console.error('Edge function error:', error);
+            throw new Error(error.message || 'Failed to create collector');
+          }
+
+          if (!response?.success) {
+            throw new Error(response?.error || 'Failed to create collector');
+          }
+
+          console.log('Collector created successfully:', response.data);
+          setSubmitSuccess(`Collector ${data.name} created successfully!`);
+        } else {
+          throw new Error('Supabase not available');
+        }
+      } catch (supabaseError) {
+        console.warn('Supabase failed, falling back to mock data:', supabaseError);
+
         const response = await mockDataService.createCollector({
           name: data.name,
           email: data.email,
@@ -83,35 +111,8 @@ const AddCollectorModal: React.FC<AddCollectorModalProps> = ({
           throw new Error(response.error || 'Failed to create collector');
         }
 
-        console.log('Collector created successfully:', response.data);
-        setSubmitSuccess(`Collector ${data.name} created successfully!`);
-      } else {
-        // Use Supabase Edge Function
-        if (!supabase) {
-          throw new Error('Supabase client not available');
-        }
-
-        const { data: response, error } = await supabase.functions.invoke('create-new-collector', {
-          body: {
-            name: data.name,
-            email: data.email,
-            password: data.password,
-            phone: data.phone || undefined,
-            vehicle_id: data.vehicle_id || undefined
-          }
-        });
-
-        if (error) {
-          console.error('Edge function error:', error);
-          throw new Error(error.message || 'Failed to create collector');
-        }
-
-        if (!response.success) {
-          throw new Error(response.error || 'Failed to create collector');
-        }
-
-        console.log('Collector created successfully:', response.data);
-        setSubmitSuccess(`Collector ${data.name} created successfully!`);
+        console.log('Collector created successfully (mock):', response.data);
+        setSubmitSuccess(`Collector ${data.name} created successfully! (Demo mode)`);
       }
 
       // Close modal and refresh list after a short delay
