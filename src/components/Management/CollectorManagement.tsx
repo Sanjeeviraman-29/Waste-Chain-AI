@@ -15,7 +15,8 @@ import {
   MapPin,
   TrendingUp
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabase, isSupabaseAvailable } from '../../lib/supabase';
+import { mockDataService, shouldUseMockData } from '../../lib/mockDataService';
 import AddCollectorModal from '../collectors/AddCollectorModal';
 
 interface Collector {
