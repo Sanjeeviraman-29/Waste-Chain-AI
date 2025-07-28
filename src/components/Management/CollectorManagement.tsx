@@ -48,23 +48,27 @@ const CollectorManagement: React.FC = () => {
     try {
       setIsLoading(true);
 
-      if (shouldUseMockData()) {
-        console.log('Using mock data service (Supabase not configured)');
+      // Try Supabase first, fallback to mock data if it fails
+      try {
+        if (supabase && isSupabaseAvailable()) {
+          console.log('Fetching collectors from Supabase');
+          const { data, error } = await supabase
+            .from('collectors')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+          setCollectors(data || []);
+          console.log('Successfully fetched collectors from Supabase:', data?.length || 0);
+        } else {
+          throw new Error('Supabase not available');
+        }
+      } catch (supabaseError) {
+        console.warn('Supabase failed, falling back to mock data:', supabaseError);
         const { data, error } = await mockDataService.getCollectors();
         if (error) throw error;
         setCollectors(data || []);
-      } else {
-        if (!supabase) {
-          throw new Error('Supabase client not available');
-        }
-
-        const { data, error } = await supabase
-          .from('collectors')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setCollectors(data || []);
+        console.log('Using mock data, collectors:', data?.length || 0);
       }
     } catch (error) {
       console.error('Error fetching collectors:', error);
