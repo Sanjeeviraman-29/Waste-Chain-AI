@@ -68,29 +68,52 @@ const AddCollectorModal: React.FC<AddCollectorModalProps> = ({
     try {
       console.log('Submitting collector data:', { ...data, password: '[REDACTED]' });
 
-      const { data: response, error } = await supabase.functions.invoke('create-new-collector', {
-        body: {
+      // Use mock data service if Supabase is not available
+      if (shouldUseMockData()) {
+        console.log('Using mock data service (Supabase not configured)');
+        const response = await mockDataService.createCollector({
           name: data.name,
           email: data.email,
           password: data.password,
-          phone: data.phone || undefined,
-          vehicle_id: data.vehicle_id || undefined
+          phone: data.phone,
+          vehicle_id: data.vehicle_id
+        });
+
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to create collector');
         }
-      });
 
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to create collector');
+        console.log('Collector created successfully:', response.data);
+        setSubmitSuccess(`Collector ${data.name} created successfully!`);
+      } else {
+        // Use Supabase Edge Function
+        if (!supabase) {
+          throw new Error('Supabase client not available');
+        }
+
+        const { data: response, error } = await supabase.functions.invoke('create-new-collector', {
+          body: {
+            name: data.name,
+            email: data.email,
+            password: data.password,
+            phone: data.phone || undefined,
+            vehicle_id: data.vehicle_id || undefined
+          }
+        });
+
+        if (error) {
+          console.error('Edge function error:', error);
+          throw new Error(error.message || 'Failed to create collector');
+        }
+
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to create collector');
+        }
+
+        console.log('Collector created successfully:', response.data);
+        setSubmitSuccess(`Collector ${data.name} created successfully!`);
       }
 
-      if (!response.success) {
-        throw new Error(response.error || 'Failed to create collector');
-      }
-
-      console.log('Collector created successfully:', response.data);
-      
-      setSubmitSuccess(`Collector ${data.name} created successfully!`);
-      
       // Close modal and refresh list after a short delay
       setTimeout(() => {
         handleClose();
