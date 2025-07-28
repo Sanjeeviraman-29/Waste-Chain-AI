@@ -47,13 +47,25 @@ const CollectorManagement: React.FC = () => {
   const fetchCollectors = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('collectors')
-        .select('*')
-        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setCollectors(data || []);
+      if (shouldUseMockData()) {
+        console.log('Using mock data service (Supabase not configured)');
+        const { data, error } = await mockDataService.getCollectors();
+        if (error) throw error;
+        setCollectors(data || []);
+      } else {
+        if (!supabase) {
+          throw new Error('Supabase client not available');
+        }
+
+        const { data, error } = await supabase
+          .from('collectors')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setCollectors(data || []);
+      }
     } catch (error) {
       console.error('Error fetching collectors:', error);
     } finally {
