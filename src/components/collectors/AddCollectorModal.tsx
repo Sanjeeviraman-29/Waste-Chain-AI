@@ -14,7 +14,8 @@ import {
   CheckCircle,
   Loader2
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabase, isSupabaseAvailable } from '../../lib/supabase';
+import { mockDataService, shouldUseMockData } from '../../lib/mockDataService';
 
 // Validation schema
 const addCollectorSchema = z.object({
