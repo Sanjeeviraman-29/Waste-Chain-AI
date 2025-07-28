@@ -5,6 +5,7 @@ import './i18n';
 
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
+import DemoModeNotification from './components/DemoModeNotification';
 import StatsWidget from './components/Widgets/StatsWidget';
 import ChartWidget from './components/Widgets/ChartWidget';
 import InteractiveHeatmap from './components/Widgets/InteractiveHeatmap';
