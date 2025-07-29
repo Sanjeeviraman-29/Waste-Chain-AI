@@ -17,7 +17,7 @@ import {
   Legend
 } from 'recharts';
 import { Calendar, TrendingUp, Users, Recycle } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabase, isSupabaseAvailable } from '../../lib/supabase';
 
 interface AnalyticsData {
   wasteByType: Array<{ name: string; value: number; color: string }>;
