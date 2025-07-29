@@ -149,7 +149,17 @@ const AuthPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Auth error:', error);
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      let errorMessage = 'An unexpected error occurred';
+
+      if (error instanceof Error) {
+        if (error.message.includes('fetch')) {
+          errorMessage = 'Connection failed. Using demo mode - try the demo credentials above.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
