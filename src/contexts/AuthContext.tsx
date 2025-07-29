@@ -88,8 +88,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const signIn = async (email: string, password: string): Promise<{ user: AuthUser | null; error: any }> => {
-    try {
-      if (supabase && isSupabaseAvailable()) {
+    // Always try demo mode first for better UX
+    const demoUsers = {
+      'admin@wastechain.ai': { role: 'admin', name: 'Admin User' },
+      'household@demo.com': { role: 'household', name: 'Demo Household' },
+      'collector@demo.com': { role: 'collector', name: 'Demo Collector' },
+      'company@demo.com': { role: 'company', name: 'Demo Company' }
+    };
+
+    const demoUserData = demoUsers[email as keyof typeof demoUsers];
+    if (demoUserData && password === 'demo123') {
+      const mockUser: AuthUser = {
+        id: `demo-${demoUserData.role}`,
+        email,
+        role: demoUserData.role as UserRole,
+        user_metadata: {
+          role: demoUserData.role,
+          full_name: demoUserData.name
+        },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+        app_metadata: {},
+        confirmed_at: new Date().toISOString()
+      };
+
+      setUser(mockUser);
+      localStorage.setItem('demoUser', JSON.stringify(mockUser));
+      return { user: mockUser, error: null };
+    }
+
+    // Try Supabase if demo credentials don't match
+    if (supabase && isSupabaseAvailable()) {
+      try {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
@@ -105,44 +135,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(authUser);
           return { user: authUser, error: null };
         }
-      } else {
-        // Demo mode sign in
-        const demoUsers = {
-          'admin@wastechain.ai': { role: 'admin', name: 'Admin User' },
-          'household@demo.com': { role: 'household', name: 'Demo Household' },
-          'collector@demo.com': { role: 'collector', name: 'Demo Collector' },
-          'company@demo.com': { role: 'company', name: 'Demo Company' }
-        };
-
-        const demoUserData = demoUsers[email as keyof typeof demoUsers];
-        if (demoUserData && password === 'demo123') {
-          const mockUser: AuthUser = {
-            id: `demo-${demoUserData.role}`,
-            email,
-            role: demoUserData.role as UserRole,
-            user_metadata: { 
-              role: demoUserData.role,
-              full_name: demoUserData.name 
-            },
-            aud: 'authenticated',
-            created_at: new Date().toISOString(),
-            app_metadata: {},
-            confirmed_at: new Date().toISOString()
-          };
-          
-          setUser(mockUser);
-          localStorage.setItem('demoUser', JSON.stringify(mockUser));
-          return { user: mockUser, error: null };
-        } else {
-          throw new Error('Invalid credentials (demo mode)');
-        }
+      } catch (supabaseError) {
+        console.warn('Supabase authentication failed, falling back to demo mode:', supabaseError);
+        // Fall through to error below
       }
-
-      return { user: null, error: new Error('Unknown error') };
-    } catch (error) {
-      console.error('Sign in error:', error);
-      return { user: null, error };
     }
+
+    // If we get here, neither demo nor Supabase worked
+    return { user: null, error: new Error('Invalid credentials. Try demo credentials or check your connection.') };
   };
 
   const signUp = async (
