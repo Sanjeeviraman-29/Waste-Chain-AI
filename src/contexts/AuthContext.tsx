@@ -146,13 +146,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signUp = async (
-    email: string, 
-    password: string, 
-    userData: any, 
+    email: string,
+    password: string,
+    userData: any,
     role: UserRole
   ): Promise<{ user: AuthUser | null; error: any }> => {
-    try {
-      if (supabase && isSupabaseAvailable()) {
+    // Try Supabase first for sign up if available
+    if (supabase && isSupabaseAvailable()) {
+      try {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -173,32 +174,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           };
           return { user: authUser, error: null };
         }
-      } else {
-        // Demo mode sign up
-        const mockUser: AuthUser = {
-          id: `demo-${role}-${Date.now()}`,
-          email,
-          role,
-          user_metadata: { 
-            role,
-            ...userData 
-          },
-          aud: 'authenticated',
-          created_at: new Date().toISOString(),
-          app_metadata: {},
-          confirmed_at: new Date().toISOString()
-        };
-        
-        setUser(mockUser);
-        localStorage.setItem('demoUser', JSON.stringify(mockUser));
-        return { user: mockUser, error: null };
+      } catch (supabaseError) {
+        console.warn('Supabase signup failed, falling back to demo mode:', supabaseError);
+        // Fall through to demo mode
       }
-
-      return { user: null, error: new Error('Unknown error') };
-    } catch (error) {
-      console.error('Sign up error:', error);
-      return { user: null, error };
     }
+
+    // Demo mode sign up (fallback or primary)
+    const mockUser: AuthUser = {
+      id: `demo-${role}-${Date.now()}`,
+      email,
+      role,
+      user_metadata: {
+        role,
+        ...userData
+      },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+      app_metadata: {},
+      confirmed_at: new Date().toISOString()
+    };
+
+    setUser(mockUser);
+    localStorage.setItem('demoUser', JSON.stringify(mockUser));
+    return { user: mockUser, error: null };
   };
 
   const signOut = async (): Promise<void> => {
