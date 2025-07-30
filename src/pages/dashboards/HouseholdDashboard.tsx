@@ -91,7 +91,9 @@ const HouseholdDashboard: React.FC = () => {
         if (!pickupsError && pickupsData) {
           setPickups(pickupsData as Pickup[]);
         } else {
-          console.error('Error fetching pickups:', pickupsError);
+          console.error('Error fetching pickups:', pickupsError?.message || pickupsError);
+          // Fallback to demo data if RLS policy blocks access
+          setPickups([]);
         }
 
         // Fetch user profile for stats
@@ -109,7 +111,8 @@ const HouseholdDashboard: React.FC = () => {
             totalPickups: profileData.total_pickups || prev.totalPickups
           }));
         } else {
-          console.error('Error fetching profile:', profileError);
+          console.error('Error fetching profile:', profileError?.message || profileError);
+          // Continue with default stats if profile fetch fails
         }
       }
     } catch (error) {
@@ -136,7 +139,8 @@ const HouseholdDashboard: React.FC = () => {
       const { url: imageUrl, error: uploadError } = await uploadImage(scheduleForm.image, imagePath);
 
       if (uploadError || !imageUrl) {
-        throw new Error('Failed to upload image: ' + uploadError?.message);
+        console.error('Upload error details:', uploadError);
+        throw new Error('Failed to upload image: ' + (uploadError?.message || 'Unknown upload error'));
       }
 
       // Step 2: Get user's address from profile or use fallback
@@ -197,7 +201,8 @@ const HouseholdDashboard: React.FC = () => {
       fetchUserData();
     } catch (error) {
       console.error('Error scheduling pickup:', error);
-      alert('Error scheduling pickup: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      alert('Error scheduling pickup: ' + errorMessage);
     } finally {
       setUploadingPickup(false);
     }
