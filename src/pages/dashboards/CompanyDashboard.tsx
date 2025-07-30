@@ -145,44 +145,30 @@ const CompanyDashboard: React.FC = () => {
   const fetchCompanyData = async () => {
     try {
       setIsLoading(true);
-      
-      if (supabase && isSupabaseAvailable() && user) {
-        // Fetch EPR transactions
-        const { data: transactionsData, error: transactionsError } = await supabase
-          .from('epr_transactions')
-          .select('*')
-          .eq('company_id', user.id)
-          .order('transaction_date', { ascending: false });
 
-        if (!transactionsError && transactionsData) {
-          setTransactions(transactionsData);
+      if (user) {
+        // Fetch available EPR credits
+        const { data: availableData, error: availableError } = await getAvailableEPRCredits();
+        if (!availableError && availableData) {
+          setAvailableCredits(availableData as EPRCredit[]);
         }
-      } else {
-        // Mock data for demo mode
-        const mockTransactions: EPRTransaction[] = [
-          {
-            id: '1',
-            credits_purchased: 500,
-            amount_paid: 65000,
-            transaction_date: '2024-01-15T10:00:00Z',
-            status: 'completed'
-          },
-          {
-            id: '2',
-            credits_purchased: 250,
-            amount_paid: 35000,
-            transaction_date: '2024-01-10T14:30:00Z',
-            status: 'completed'
-          },
-          {
-            id: '3',
-            credits_purchased: 100,
-            amount_paid: 15000,
-            transaction_date: '2024-01-05T09:15:00Z',
-            status: 'completed'
-          }
-        ];
-        setTransactions(mockTransactions);
+
+        // Fetch company's purchased credits
+        const { data: myCreditsData, error: myCreditsError } = await getCompanyCredits(user.id);
+        if (!myCreditsError && myCreditsData) {
+          setMyCredits(myCreditsData as EPRCredit[]);
+
+          // Update company stats based on owned credits
+          const totalWeight = myCreditsData.reduce((sum, credit) => sum + credit.weight_kg, 0);
+          const totalAmount = myCreditsData.reduce((sum, credit) => sum + credit.price, 0);
+
+          setCompanyStats(prev => ({
+            ...prev,
+            totalWasteRecycled: totalWeight,
+            totalEPRCredits: myCreditsData.length,
+            monthlySpend: totalAmount
+          }));
+        }
       }
     } catch (error) {
       console.error('Error fetching company data:', error);
