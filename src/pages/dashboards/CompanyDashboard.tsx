@@ -23,7 +23,14 @@ import {
   Shield
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase, isSupabaseAvailable } from '../../lib/supabase';
+import {
+  supabaseClient,
+  getAvailableEPRCredits,
+  getCompanyCredits,
+  getCreditDigitalTrail,
+  purchaseEPRCredit,
+  type Tables
+} from '../../lib/supabaseClient';
 // Import jsPDF for report generation
 import jsPDF from 'jspdf';
 
