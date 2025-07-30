@@ -20,7 +20,9 @@ import {
   Globe,
   Users,
   Package,
-  Shield
+  Shield,
+  X,
+  Home
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
