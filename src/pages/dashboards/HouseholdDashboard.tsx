@@ -81,38 +81,48 @@ const HouseholdDashboard: React.FC = () => {
       setIsLoading(true);
 
       if (user) {
-        // Fetch user pickups from live database
-        const { data: pickupsData, error: pickupsError } = await supabaseClient
-          .from('pickups')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+        const isDemoUser = user.id.startsWith('demo-');
 
-        if (!pickupsError && pickupsData) {
-          setPickups(pickupsData as Pickup[]);
-        } else {
-          console.error('Error fetching pickups:', pickupsError?.message || pickupsError);
-          // Fallback to demo data if RLS policy blocks access
+        if (isDemoUser) {
+          // Demo mode - use mock data
+          console.log('Demo mode detected, using mock data');
           setPickups([]);
-        }
-
-        // Fetch user profile for stats
-        const { data: profileData, error: profileError } = await supabaseClient
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (!profileError && profileData) {
-          setUserStats(prev => ({
-            ...prev,
-            greenPoints: profileData.green_points || prev.greenPoints,
-            weeklyStreak: profileData.weekly_streak || prev.weeklyStreak,
-            totalPickups: profileData.total_pickups || prev.totalPickups
-          }));
+          // Keep existing demo stats
         } else {
-          console.error('Error fetching profile:', profileError?.message || profileError);
-          // Continue with default stats if profile fetch fails
+          // Real user - fetch from database
+          // Fetch user pickups from live database
+          const { data: pickupsData, error: pickupsError } = await supabaseClient
+            .from('pickups')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (!pickupsError && pickupsData) {
+            setPickups(pickupsData as Pickup[]);
+          } else {
+            console.error('Error fetching pickups:', pickupsError?.message || pickupsError);
+            // Fallback to demo data if RLS policy blocks access
+            setPickups([]);
+          }
+
+          // Fetch user profile for stats
+          const { data: profileData, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (!profileError && profileData) {
+            setUserStats(prev => ({
+              ...prev,
+              greenPoints: profileData.green_points || prev.greenPoints,
+              weeklyStreak: profileData.weekly_streak || prev.weeklyStreak,
+              totalPickups: profileData.total_pickups || prev.totalPickups
+            }));
+          } else {
+            console.error('Error fetching profile:', profileError?.message || profileError);
+            // Continue with default stats if profile fetch fails
+          }
         }
       }
     } catch (error) {
@@ -125,6 +135,35 @@ const HouseholdDashboard: React.FC = () => {
   const handleSchedulePickup = async () => {
     if (!user || !scheduleForm.wasteType || !scheduleForm.image) {
       alert('Please select waste type and upload an image');
+      return;
+    }
+
+    const isDemoUser = user.id.startsWith('demo-');
+
+    if (isDemoUser) {
+      // Demo mode - simulate successful pickup scheduling
+      setUploadingPickup(true);
+      setPickupSuccess(null);
+
+      // Simulate upload delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setPickupSuccess('Pickup Scheduled Successfully! (Demo Mode) - Our team will contact you soon.');
+
+      // Reset form and close modal
+      setScheduleForm({
+        wasteType: '',
+        image: null,
+        estimatedWeight: '',
+        specialInstructions: ''
+      });
+
+      setTimeout(() => {
+        setShowScheduleModal(false);
+        setPickupSuccess(null);
+      }, 2000);
+
+      setUploadingPickup(false);
       return;
     }
 
