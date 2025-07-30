@@ -43,22 +43,44 @@ interface CompanyStats {
   monthlySpend: number;
 }
 
-interface EPRTransaction {
+interface EPRCredit {
   id: string;
-  credits_purchased: number;
-  amount_paid: number;
-  transaction_date: string;
-  status: string;
-  certificate_url?: string;
+  credit_type: string;
+  description: string;
+  weight_kg: number;
+  material_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+  price: number;
+  status: 'AVAILABLE' | 'SOLD' | 'RETIRED';
+  company_id: string | null;
+  pickup_id: string | null;
+  certificate_url: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
-interface CreditPackage {
+interface CreditDigitalTrail {
   id: string;
-  name: string;
-  credits: number;
-  price: number;
+  credit_type: string;
   description: string;
-  popular?: boolean;
+  weight_kg: number;
+  material_type: string;
+  pickup_id: string | null;
+  pickups?: {
+    id: string;
+    user_id: string;
+    waste_type: string;
+    pickup_address: string;
+    image_url: string | null;
+    status: string;
+    created_at: string;
+  } | null;
+  ledger_entries?: Array<{
+    id: string;
+    transaction_type: string;
+    amount: number | null;
+    created_at: string;
+    transaction_data: any;
+  }>;
 }
 
 const CompanyDashboard: React.FC = () => {
