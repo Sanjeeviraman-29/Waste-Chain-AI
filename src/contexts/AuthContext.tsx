@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase, isSupabaseAvailable } from '../lib/supabase';
+import { supabaseClient } from '../lib/supabaseClient';
 
 export type UserRole = 'household' | 'collector' | 'company' | 'admin';
 
@@ -39,8 +39,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check if user is already logged in
     const getInitialSession = async () => {
       try {
-        if (supabase && isSupabaseAvailable()) {
-          const { data: { session } } = await supabase.auth.getSession();
+        try {
+          const { data: { session } } = await supabaseClient.auth.getSession();
           if (session?.user) {
             const authUser: AuthUser = {
               ...session.user,
@@ -48,7 +48,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             };
             setUser(authUser);
           }
-        } else {
+        } catch (error) {
+          console.warn('Supabase session check failed, using demo mode:', error);
           // Demo mode - check localStorage for mock user
           const demoUser = localStorage.getItem('demoUser');
           if (demoUser) {
@@ -65,11 +66,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     getInitialSession();
 
     // Listen for auth state changes
-    if (supabase && isSupabaseAvailable()) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    try {
+      const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
         async (event, session) => {
           console.log('Auth state changed:', event, session?.user?.email);
-          
+
           if (session?.user) {
             const authUser: AuthUser = {
               ...session.user,
@@ -84,6 +85,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       );
 
       return () => subscription.unsubscribe();
+    } catch (error) {
+      console.warn('Auth state listener setup failed:', error);
     }
   }, []);
 
@@ -118,27 +121,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     // Try Supabase if demo credentials don't match
-    if (supabase && isSupabaseAvailable()) {
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        if (data.user) {
-          const authUser: AuthUser = {
-            ...data.user,
-            role: data.user.user_metadata?.role as UserRole || 'household'
-          };
-          setUser(authUser);
-          return { user: authUser, error: null };
-        }
-      } catch (supabaseError) {
-        console.warn('Supabase authentication failed, falling back to demo mode:', supabaseError);
-        // Fall through to error below
+      if (data.user) {
+        const authUser: AuthUser = {
+          ...data.user,
+          role: data.user.user_metadata?.role as UserRole || 'household'
+        };
+        setUser(authUser);
+        return { user: authUser, error: null };
       }
+    } catch (supabaseError) {
+      console.warn('Supabase authentication failed, falling back to demo mode:', supabaseError);
+      // Fall through to error below
     }
 
     // If we get here, neither demo nor Supabase worked
@@ -151,33 +152,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     userData: any,
     role: UserRole
   ): Promise<{ user: AuthUser | null; error: any }> => {
-    // Try Supabase first for sign up if available
-    if (supabase && isSupabaseAvailable()) {
-      try {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              role,
-              ...userData
-            }
+    // Try Supabase first for sign up
+    try {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role,
+            ...userData
           }
-        });
-
-        if (error) throw error;
-
-        if (data.user) {
-          const authUser: AuthUser = {
-            ...data.user,
-            role
-          };
-          return { user: authUser, error: null };
         }
-      } catch (supabaseError) {
-        console.warn('Supabase signup failed, falling back to demo mode:', supabaseError);
-        // Fall through to demo mode
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const authUser: AuthUser = {
+          ...data.user,
+          role
+        };
+        return { user: authUser, error: null };
       }
+    } catch (supabaseError) {
+      console.warn('Supabase signup failed, falling back to demo mode:', supabaseError);
+      // Fall through to demo mode
     }
 
     // Demo mode sign up (fallback or primary)
@@ -202,12 +201,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signOut = async (): Promise<void> => {
     try {
-      if (supabase && isSupabaseAvailable()) {
-        await supabase.auth.signOut();
-      } else {
-        // Demo mode sign out
-        localStorage.removeItem('demoUser');
+      try {
+        await supabaseClient.auth.signOut();
+      } catch (error) {
+        console.warn('Supabase sign out failed:', error);
       }
+      // Always clean up demo mode data
+      localStorage.removeItem('demoUser');
       setUser(null);
     } catch (error) {
       console.error('Sign out error:', error);
