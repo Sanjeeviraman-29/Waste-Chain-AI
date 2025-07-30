@@ -26,11 +26,12 @@ import { supabaseClient, uploadImage, insertPickup, type Tables } from '../../li
 
 interface Pickup {
   id: string;
-  waste_category: string;
-  estimated_weight: number;
-  status: string;
+  waste_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+  estimated_weight: number | null;
+  status: 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COLLECTED' | 'PROCESSED' | 'COMPLETED' | 'CANCELLED';
   pickup_address: string;
-  scheduled_date: string;
+  image_url: string | null;
+  scheduled_date: string | null;
   points_awarded: number;
   created_at: string;
 }
