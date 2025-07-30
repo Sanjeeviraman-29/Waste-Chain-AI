@@ -28,17 +28,7 @@ export const supabase = isValidSupabaseConfig(supabaseUrl, supabaseAnonKey)
 
 // Helper function to check if Supabase is available
 export const isSupabaseAvailable = (): boolean => {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  // Check if we have valid-looking URLs and keys
-  return supabase !== null &&
-         supabaseUrl &&
-         supabaseAnonKey &&
-         supabaseUrl.includes('supabase.co') &&
-         !supabaseUrl.includes('demo') &&
-         supabaseAnonKey.length > 20 && // Real keys are much longer
-         !supabaseAnonKey.includes('demo');
+  return supabase !== null && isValidSupabaseConfig(supabaseUrl, supabaseAnonKey);
 };
 
 // Database types (generated from schema)
