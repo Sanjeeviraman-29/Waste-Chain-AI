@@ -558,7 +558,7 @@ const CompanyDashboard: React.FC = () => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                                    {credit.material_type}
+                                    {credit.type}
                                   </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
