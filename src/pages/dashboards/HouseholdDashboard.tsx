@@ -148,12 +148,18 @@ const HouseholdDashboard: React.FC = () => {
                 .insert(defaultProfile);
 
               if (createError) {
-                console.error('Error creating profile:', createError);
+                const errorMsg = createError?.message || createError?.error_description || createError?.hint || JSON.stringify(createError, null, 2);
+                console.error('Error creating profile:', errorMsg);
+                console.error('Full error object:', createError);
               } else {
                 console.log('Default profile created successfully');
               }
             } catch (createError) {
-              console.error('Failed to create default profile:', createError);
+              const errorMsg = createError instanceof Error ? createError.message :
+                (typeof createError === 'object' && createError !== null) ?
+                  JSON.stringify(createError, null, 2) : String(createError);
+              console.error('Failed to create default profile:', errorMsg);
+              console.error('Full error object:', createError);
             }
           }
         }
@@ -223,7 +229,9 @@ const HouseholdDashboard: React.FC = () => {
         .maybeSingle(); // Use maybeSingle() to handle missing profiles
 
       if (profileFetchError) {
-        console.warn('Error fetching profile for address:', profileFetchError);
+        const errorMsg = profileFetchError?.message || profileFetchError?.error_description || profileFetchError?.hint || JSON.stringify(profileFetchError, null, 2);
+        console.warn('Error fetching profile for address:', errorMsg);
+        console.warn('Full error object:', profileFetchError);
       }
 
       const userAddress = profileData?.address
@@ -258,7 +266,9 @@ const HouseholdDashboard: React.FC = () => {
         .eq('id', user.id);
 
       if (updateError) {
-        console.warn('Failed to update user pickup count:', updateError);
+        const errorMsg = updateError?.message || updateError?.error_description || updateError?.hint || JSON.stringify(updateError, null, 2);
+        console.warn('Failed to update user pickup count:', errorMsg);
+        console.warn('Full error object:', updateError);
         // Don't throw error, pickup was still successful
       }
 
