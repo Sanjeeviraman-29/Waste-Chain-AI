@@ -214,11 +214,10 @@ const HouseholdDashboard: React.FC = () => {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'organic': return '����';
-      case 'plastic': return '♻️';
-      case 'paper': return '📄';
-      case 'electronic': return '🔌';
-      case 'hazardous': return '⚠️';
+      case 'Organic': return '🥬';
+      case 'Plastic': return '♻️';
+      case 'Paper': return '📄';
+      case 'E-Waste': return '🔌';
       default: return '🗑️';
     }
   };
