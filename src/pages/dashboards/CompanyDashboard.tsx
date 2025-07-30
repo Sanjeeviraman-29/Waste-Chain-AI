@@ -177,62 +177,58 @@ const CompanyDashboard: React.FC = () => {
     }
   };
 
-  const handlePurchaseCredits = async () => {
+  const handlePurchaseCredit = async (creditId: string) => {
+    if (!user) return;
+
+    try {
+      setPurchasingCreditId(creditId);
+
+      // Purchase the credit using Supabase RPC function or direct update
+      const { error } = await supabaseClient
+        .from('epr_credits')
+        .update({
+          status: 'SOLD',
+          company_id: user.id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', creditId)
+        .eq('status', 'AVAILABLE'); // Ensure it's still available
+
+      if (error) throw error;
+
+      // Create ledger entry
+      await supabaseClient
+        .from('ledger_entries')
+        .insert([{
+          user_id: user.id,
+          epr_credit_id: creditId,
+          transaction_type: 'credit_purchased',
+          amount: availableCredits.find(c => c.id === creditId)?.price || 0,
+          transaction_data: {
+            action: 'EPR Credit Purchase',
+            credit_id: creditId
+          }
+        }]);
+
+      alert('EPR Credit purchased successfully!');
+      fetchCompanyData(); // Refresh data
+    } catch (error) {
+      console.error('Error purchasing credit:', error);
+      alert('Error purchasing credit. Please try again.');
+    } finally {
+      setPurchasingCreditId(null);
+    }
+  };
+
+  const viewDigitalTrail = async (creditId: string) => {
     try {
       setIsLoading(true);
-
-      const credits = selectedPackage?.id === 'custom' 
-        ? parseInt(purchaseForm.credits) 
-        : selectedPackage?.credits || 0;
-      
-      const amount = selectedPackage?.id === 'custom'
-        ? credits * 150 // ₹150 per credit for custom
-        : selectedPackage?.price || 0;
-
-      const transactionData = {
-        company_id: user?.id,
-        credits_purchased: credits,
-        amount_paid: amount,
-        transaction_date: new Date().toISOString(),
-        status: 'completed',
-        package_type: selectedPackage?.name
-      };
-
-      if (supabase && isSupabaseAvailable()) {
-        const { data, error } = await supabase
-          .from('epr_transactions')
-          .insert([transactionData])
-          .select()
-          .single();
-
-        if (error) throw error;
-        console.log('EPR credits purchased successfully:', data);
-      } else {
-        // Mock transaction
-        const mockTransaction: EPRTransaction = {
-          id: Date.now().toString(),
-          ...transactionData,
-          transaction_date: new Date().toISOString()
-        };
-        setTransactions(prev => [mockTransaction, ...prev]);
-      }
-
-      // Update stats
-      setCompanyStats(prev => ({
-        ...prev,
-        totalEPRCredits: prev.totalEPRCredits + credits,
-        monthlySpend: prev.monthlySpend + amount
-      }));
-
-      // Reset form and close modal
-      setPurchaseForm({ credits: '', customAmount: false });
-      setSelectedPackage(null);
-      setShowPurchaseModal(false);
-      
-      alert(`Successfully purchased ${credits} EPR credits for ₹${amount.toLocaleString()}`);
+      const trailData = await getCreditDigitalTrail(creditId);
+      setSelectedCreditTrail(trailData as CreditDigitalTrail);
+      setShowDigitalTrail(true);
     } catch (error) {
-      console.error('Error purchasing credits:', error);
-      alert('Error purchasing credits. Please try again.');
+      console.error('Error fetching digital trail:', error);
+      alert('Error loading digital trail.');
     } finally {
       setIsLoading(false);
     }
