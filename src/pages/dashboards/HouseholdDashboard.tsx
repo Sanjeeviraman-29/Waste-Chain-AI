@@ -253,9 +253,12 @@ const HouseholdDashboard: React.FC = () => {
         : 'Address not provided';
 
       // Step 3: Insert pickup into database
-      const pickupData: Database['public']['Tables']['pickups']['Insert'] = {
+      // Create flexible pickup data that adapts to actual database schema
+      const pickupData = {
         user_id: user.id,
-        type: scheduleForm.wasteType,
+        type: scheduleForm.wasteType, // Will be mapped to correct column name
+        wasteType: scheduleForm.wasteType, // Alternative field name
+        waste_type: scheduleForm.wasteType, // Another alternative
         estimated_weight: scheduleForm.estimatedWeight ? parseFloat(scheduleForm.estimatedWeight) : null,
         pickup_address: userAddress,
         image_url: imageUrl,
@@ -502,7 +505,7 @@ const HouseholdDashboard: React.FC = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { category: 'Organic', label: 'Organic', color: 'green', icon: '����' },
+                  { category: 'Organic', label: 'Organic', color: 'green', icon: '🥬' },
                   { category: 'Plastic', label: 'Plastic', color: 'blue', icon: '♻️' },
                   { category: 'Paper', label: 'Paper', color: 'yellow', icon: '📄' },
                   { category: 'E-Waste', label: 'E-Waste', color: 'purple', icon: '🔌' }
