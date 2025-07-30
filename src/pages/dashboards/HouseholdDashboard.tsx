@@ -64,13 +64,13 @@ const HouseholdDashboard: React.FC = () => {
 
   // Schedule Pickup Form State
   const [scheduleForm, setScheduleForm] = useState({
-    wasteCategory: '',
+    wasteType: '' as 'Plastic' | 'E-Waste' | 'Paper' | 'Organic' | '',
+    image: null as File | null,
     estimatedWeight: '',
-    address: '',
-    scheduledDate: '',
-    specialInstructions: '',
-    photos: [] as File[]
+    specialInstructions: ''
   });
+  const [uploadingPickup, setUploadingPickup] = useState(false);
+  const [pickupSuccess, setPickupSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUserData();
