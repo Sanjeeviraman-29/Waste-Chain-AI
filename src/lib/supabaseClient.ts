@@ -238,7 +238,11 @@ export const uploadImage = async (file: File, path: string): Promise<{ url: stri
 
     return { url: publicUrl, error: null };
   } catch (error) {
-    console.error('Error uploading image:', error);
+    const errorMsg = error instanceof Error ? error.message :
+      (typeof error === 'object' && error !== null) ?
+        JSON.stringify(error, null, 2) : String(error);
+    console.error('Error uploading image:', errorMsg);
+    console.error('Full error object:', error);
     return { url: null, error: error as Error };
   }
 };
