@@ -371,6 +371,11 @@ const HouseholdDashboard: React.FC = () => {
     }
   };
 
+  // Get the waste type from pickup object (flexible field access)
+  const getPickupType = (pickup: any) => {
+    return pickup.type || pickup.waste_type || pickup.category || pickup.kind || pickup.material_type || 'Unknown';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
