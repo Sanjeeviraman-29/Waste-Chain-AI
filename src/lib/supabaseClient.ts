@@ -255,46 +255,73 @@ export const uploadImage = async (file: File, path: string): Promise<{ url: stri
   }
 };
 
-export const insertPickup = async (pickupData: Database['public']['Tables']['pickups']['Insert']) => {
+export const insertPickup = async (pickupData: any) => {
   try {
-    console.log('Inserting pickup with data:', pickupData);
+    console.log('🔄 Starting adaptive pickup insertion...');
+    console.log('Original pickup data:', pickupData);
+
+    // First, detect the actual column structure
+    const wasteTypeColumn = await getWasteTypeColumn();
+    const allColumns = await detectTableColumns('pickups');
+
+    console.log('Detected waste type column:', wasteTypeColumn);
+    console.log('All detected columns:', allColumns);
+
+    // Create adaptive data object using detected columns
+    const adaptiveData: any = {
+      user_id: pickupData.user_id,
+      [wasteTypeColumn]: pickupData.type || pickupData.waste_type || pickupData.wasteType,
+      status: pickupData.status || 'PENDING'
+    };
+
+    // Add other fields if they exist in the table
+    const fieldMappings: { [key: string]: string[] } = {
+      estimated_weight: ['estimated_weight', 'weight', 'estimated_kg'],
+      pickup_address: ['pickup_address', 'address', 'location'],
+      image_url: ['image_url', 'image', 'photo_url'],
+      special_instructions: ['special_instructions', 'instructions', 'notes'],
+      points_awarded: ['points_awarded', 'points', 'reward_points'],
+      scheduled_date: ['scheduled_date', 'pickup_date', 'date'],
+    };
+
+    // Map fields based on what exists in the database
+    Object.entries(fieldMappings).forEach(([dataField, possibleColumns]) => {
+      const matchingColumn = possibleColumns.find(col => allColumns.includes(col));
+      if (matchingColumn && pickupData[dataField] !== undefined) {
+        adaptiveData[matchingColumn] = pickupData[dataField];
+      }
+    });
+
+    // Add timestamps if they exist
+    if (allColumns.includes('created_at')) {
+      adaptiveData.created_at = new Date().toISOString();
+    }
+    if (allColumns.includes('updated_at')) {
+      adaptiveData.updated_at = new Date().toISOString();
+    }
+
+    console.log('Adaptive pickup data for insertion:', adaptiveData);
 
     const result = await supabaseClient
       .from('pickups')
-      .insert([pickupData])
+      .insert([adaptiveData])
       .select()
       .single();
 
-    console.log('Pickup insertion result:', result);
+    console.log('✅ Pickup insertion successful:', result);
     return result;
+
   } catch (error) {
-    console.error('Pickup insertion failed:', error);
+    console.error('❌ Adaptive pickup insertion failed:', error);
 
-    // If the error is about 'type' column not found, try with 'waste_type'
-    if (error && typeof error === 'object' && 'message' in error &&
-        typeof error.message === 'string' && error.message.includes('type')) {
-
-      console.log('Retrying with waste_type column...');
-      try {
-        // Convert 'type' to 'waste_type' and retry
-        const fallbackData = { ...pickupData };
-        if ('type' in fallbackData) {
-          (fallbackData as any).waste_type = fallbackData.type;
-          delete (fallbackData as any).type;
-        }
-
-        const retryResult = await supabaseClient
-          .from('pickups')
-          .insert([fallbackData])
-          .select()
-          .single();
-
-        console.log('Pickup insertion succeeded with waste_type:', retryResult);
-        return retryResult;
-      } catch (retryError) {
-        console.error('Retry with waste_type also failed:', retryError);
-        throw retryError;
-      }
+    // Enhanced error logging
+    if (error && typeof error === 'object') {
+      const supabaseError = error as any;
+      console.error('Error details:');
+      console.error('- Message:', supabaseError?.message);
+      console.error('- Code:', supabaseError?.code);
+      console.error('- Details:', supabaseError?.details);
+      console.error('- Hint:', supabaseError?.hint);
     }
 
     throw error;
