@@ -123,8 +123,38 @@ const HouseholdDashboard: React.FC = () => {
             console.error('Error fetching profile:', profileError?.message || profileError);
             // Continue with default stats if profile fetch fails
           } else {
-            console.log('No profile found for user, will create one if needed');
-            // No profile exists yet - this is normal for new users
+            console.log('No profile found for user, creating default profile');
+            // Create a default profile for new users
+            try {
+              const defaultProfile = {
+                id: user.id,
+                email: user.email || '',
+                full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+                phone: null,
+                address: null,
+                city: null,
+                postal_code: null,
+                green_points: 0,
+                weekly_streak: 0,
+                total_pickups: 0,
+                last_pickup_date: null,
+                role: user.role || 'household',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              };
+
+              const { error: createError } = await supabaseClient
+                .from('profiles')
+                .insert(defaultProfile);
+
+              if (createError) {
+                console.error('Error creating profile:', createError);
+              } else {
+                console.log('Default profile created successfully');
+              }
+            } catch (createError) {
+              console.error('Failed to create default profile:', createError);
+            }
           }
         }
       }
@@ -219,13 +249,18 @@ const HouseholdDashboard: React.FC = () => {
       console.log('Pickup scheduled successfully:', data);
 
       // Step 4: Update user's pickup count
-      await supabaseClient
+      const { error: updateError } = await supabaseClient
         .from('profiles')
         .update({
           total_pickups: (userStats.totalPickups || 0) + 1,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
+
+      if (updateError) {
+        console.warn('Failed to update user pickup count:', updateError);
+        // Don't throw error, pickup was still successful
+      }
 
       // Success notification
       setPickupSuccess('Pickup Scheduled Successfully! Our team will contact you soon.');
