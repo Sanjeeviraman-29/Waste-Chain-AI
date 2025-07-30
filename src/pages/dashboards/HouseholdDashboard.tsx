@@ -139,7 +139,6 @@ const HouseholdDashboard: React.FC = () => {
                 weekly_streak: 0,
                 total_pickups: 0,
                 last_pickup_date: null,
-                role: user.role || 'household',
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               };
@@ -488,7 +487,7 @@ const HouseholdDashboard: React.FC = () => {
                   { category: 'Organic', label: 'Organic', color: 'green', icon: '🥬' },
                   { category: 'Plastic', label: 'Plastic', color: 'blue', icon: '♻️' },
                   { category: 'Paper', label: 'Paper', color: 'yellow', icon: '📄' },
-                  { category: 'E-Waste', label: 'E-Waste', color: 'purple', icon: '���' }
+                  { category: 'E-Waste', label: 'E-Waste', color: 'purple', icon: '🔌' }
                 ].map((type) => (
                   <motion.div
                     key={type.category}
