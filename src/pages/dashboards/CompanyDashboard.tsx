@@ -45,20 +45,8 @@ interface CompanyStats {
   monthlySpend: number;
 }
 
-interface EPRCredit {
-  id: string;
-  credit_type: string;
-  description: string;
-  weight_kg: number;
-  material_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
-  price: number;
-  status: 'AVAILABLE' | 'SOLD' | 'RETIRED';
-  company_id: string | null;
-  pickup_id: string | null;
-  certificate_url: string | null;
-  created_at: string;
-  updated_at: string;
-}
+// Use standardized database types
+type EPRCredit = Tables<'epr_credits'>;
 
 interface CreditDigitalTrail {
   id: string;
