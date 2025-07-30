@@ -110,7 +110,7 @@ const HouseholdDashboard: React.FC = () => {
             .from('profiles')
             .select('*')
             .eq('id', user.id)
-            .single();
+            .maybeSingle(); // Use maybeSingle() instead of single() to handle no rows gracefully
 
           if (!profileError && profileData) {
             setUserStats(prev => ({
@@ -119,9 +119,12 @@ const HouseholdDashboard: React.FC = () => {
               weeklyStreak: profileData.weekly_streak || prev.weeklyStreak,
               totalPickups: profileData.total_pickups || prev.totalPickups
             }));
-          } else {
+          } else if (profileError) {
             console.error('Error fetching profile:', profileError?.message || profileError);
             // Continue with default stats if profile fetch fails
+          } else {
+            console.log('No profile found for user, will create one if needed');
+            // No profile exists yet - this is normal for new users
           }
         }
       }
@@ -183,11 +186,15 @@ const HouseholdDashboard: React.FC = () => {
       }
 
       // Step 2: Get user's address from profile or use fallback
-      const { data: profileData } = await supabaseClient
+      const { data: profileData, error: profileFetchError } = await supabaseClient
         .from('profiles')
         .select('address, city')
         .eq('id', user.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle() to handle missing profiles
+
+      if (profileFetchError) {
+        console.warn('Error fetching profile for address:', profileFetchError);
+      }
 
       const userAddress = profileData?.address
         ? `${profileData.address}, ${profileData.city || ''}`.trim()
@@ -240,7 +247,23 @@ const HouseholdDashboard: React.FC = () => {
       fetchUserData();
     } catch (error) {
       console.error('Error scheduling pickup:', error);
-      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+      let errorMessage = 'Unknown error occurred';
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        // Handle Supabase error objects
+        if ('message' in error) {
+          errorMessage = String(error.message);
+        } else if ('error' in error) {
+          errorMessage = String(error.error);
+        } else {
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      } else {
+        errorMessage = String(error);
+      }
+
       alert('Error scheduling pickup: ' + errorMessage);
     } finally {
       setUploadingPickup(false);
