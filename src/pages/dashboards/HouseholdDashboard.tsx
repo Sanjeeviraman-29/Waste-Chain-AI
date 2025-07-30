@@ -308,16 +308,26 @@ const HouseholdDashboard: React.FC = () => {
       fetchUserData();
     } catch (error) {
       console.error('Error scheduling pickup:', error);
+      console.error('Error details:');
+      console.error('- Type:', typeof error);
+      console.error('- Is Error instance:', error instanceof Error);
+
       let errorMessage = 'Unknown error occurred';
 
       if (error instanceof Error) {
         errorMessage = error.message;
       } else if (typeof error === 'object' && error !== null) {
         // Handle Supabase error objects
-        if ('message' in error) {
-          errorMessage = String(error.message);
-        } else if ('error' in error) {
-          errorMessage = String(error.error);
+        const supabaseError = error as any;
+        console.error('- Message:', supabaseError?.message);
+        console.error('- Code:', supabaseError?.code);
+        console.error('- Details:', supabaseError?.details);
+        console.error('- Hint:', supabaseError?.hint);
+
+        if (supabaseError?.message) {
+          errorMessage = String(supabaseError.message);
+        } else if (supabaseError?.error) {
+          errorMessage = String(supabaseError.error);
         } else {
           errorMessage = JSON.stringify(error, null, 2);
         }
