@@ -151,9 +151,13 @@ const HouseholdDashboard: React.FC = () => {
                 .insert(defaultProfile);
 
               if (createError) {
-                const errorMsg = createError?.message || createError?.error_description || createError?.hint || JSON.stringify(createError, null, 2);
-                console.error('Error creating profile:', errorMsg);
-                console.error('Full error object:', createError);
+                console.error('Error creating profile:');
+                console.error('- Message:', createError?.message);
+                console.error('- Code:', createError?.code);
+                console.error('- Details:', createError?.details);
+                console.error('- Hint:', createError?.hint);
+                console.error('- Error description:', createError?.error_description);
+                console.error('Full error object:', JSON.stringify(createError, null, 2));
               } else {
                 console.log('Default profile created successfully');
               }
@@ -257,13 +261,13 @@ const HouseholdDashboard: React.FC = () => {
       const { data, error } = await insertPickup(pickupData);
 
       if (error) {
-        console.error('Pickup insertion error details:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          fullError: error
-        });
+        console.error('Pickup insertion error details:');
+        console.error('- Message:', error?.message);
+        console.error('- Code:', error?.code);
+        console.error('- Details:', error?.details);
+        console.error('- Hint:', error?.hint);
+        console.error('- Error description:', error?.error_description);
+        console.error('Full error JSON:', JSON.stringify(error, null, 2));
         throw error;
       }
 
@@ -484,7 +488,7 @@ const HouseholdDashboard: React.FC = () => {
                   { category: 'Organic', label: 'Organic', color: 'green', icon: '🥬' },
                   { category: 'Plastic', label: 'Plastic', color: 'blue', icon: '♻️' },
                   { category: 'Paper', label: 'Paper', color: 'yellow', icon: '📄' },
-                  { category: 'E-Waste', label: 'E-Waste', color: 'purple', icon: '🔌' }
+                  { category: 'E-Waste', label: 'E-Waste', color: 'purple', icon: '���' }
                 ].map((type) => (
                   <motion.div
                     key={type.category}
