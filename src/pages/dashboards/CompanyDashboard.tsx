@@ -233,7 +233,7 @@ const CompanyDashboard: React.FC = () => {
     doc.text('Credit Breakdown by Material Type', 20, 140);
 
     const materialBreakdown = myCredits.reduce((acc, credit) => {
-      acc[credit.material_type] = (acc[credit.material_type] || 0) + credit.weight_kg;
+      acc[credit.type] = (acc[credit.type] || 0) + credit.weight_kg;
       return acc;
     }, {} as Record<string, number>);
 
