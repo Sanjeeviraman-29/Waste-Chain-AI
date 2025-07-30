@@ -416,14 +416,14 @@ const HouseholdDashboard: React.FC = () => {
                       <tr key={pickup.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <span className="text-lg mr-3">{getCategoryIcon(pickup.waste_category)}</span>
-                            <span className="font-medium text-gray-900 capitalize">
-                              {pickup.waste_category}
+                            <span className="text-lg mr-3">{getCategoryIcon(pickup.waste_type)}</span>
+                            <span className="font-medium text-gray-900">
+                              {pickup.waste_type}
                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {pickup.estimated_weight} kg
+                          {pickup.estimated_weight ? `${pickup.estimated_weight} kg` : 'TBD'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize ${getStatusColor(pickup.status)}`}>
