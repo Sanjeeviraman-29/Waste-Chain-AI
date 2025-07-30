@@ -65,7 +65,7 @@ interface CreditDigitalTrail {
   credit_type: string;
   description: string;
   weight_kg: number;
-  material_type: string;
+  type: string;
   pickup_id: string | null;
   pickups?: {
     id: string;
