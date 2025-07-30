@@ -72,7 +72,7 @@ export interface Database {
           id: string;
           user_id: string;
           collector_id: string | null;
-          waste_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+          type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
           estimated_weight: number | null;
           actual_weight: number | null;
           status: 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COLLECTED' | 'PROCESSED' | 'COMPLETED' | 'CANCELLED';
@@ -94,7 +94,7 @@ export interface Database {
           id?: string;
           user_id: string;
           collector_id?: string | null;
-          waste_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+          type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
           estimated_weight?: number | null;
           actual_weight?: number | null;
           status?: 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COLLECTED' | 'PROCESSED' | 'COMPLETED' | 'CANCELLED';
@@ -116,7 +116,7 @@ export interface Database {
           id?: string;
           user_id?: string;
           collector_id?: string | null;
-          waste_type?: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+          type?: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
           estimated_weight?: number | null;
           actual_weight?: number | null;
           status?: 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COLLECTED' | 'PROCESSED' | 'COMPLETED' | 'CANCELLED';
