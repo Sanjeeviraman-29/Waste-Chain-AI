@@ -30,7 +30,6 @@ export interface Database {
           weekly_streak: number;
           total_pickups: number;
           last_pickup_date: string | null;
-          role: 'household' | 'collector' | 'company' | 'admin';
           created_at: string;
           updated_at: string;
         };
