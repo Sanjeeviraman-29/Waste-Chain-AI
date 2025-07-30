@@ -120,57 +120,86 @@ const HouseholdDashboard: React.FC = () => {
   };
 
   const handleSchedulePickup = async () => {
-    try {
-      setIsLoading(true);
+    if (!user || !scheduleForm.wasteType || !scheduleForm.image) {
+      alert('Please select waste type and upload an image');
+      return;
+    }
 
+    try {
+      setUploadingPickup(true);
+      setPickupSuccess(null);
+
+      // Step 1: Upload image to Supabase Storage
+      const timestamp = Date.now();
+      const imagePath = `public/${user.id}/${timestamp}.jpg`;
+
+      const { url: imageUrl, error: uploadError } = await uploadImage(scheduleForm.image, imagePath);
+
+      if (uploadError || !imageUrl) {
+        throw new Error('Failed to upload image: ' + uploadError?.message);
+      }
+
+      // Step 2: Get user's address from profile or use fallback
+      const { data: profileData } = await supabaseClient
+        .from('profiles')
+        .select('address, city')
+        .eq('id', user.id)
+        .single();
+
+      const userAddress = profileData?.address
+        ? `${profileData.address}, ${profileData.city || ''}`.trim()
+        : 'Address not provided';
+
+      // Step 3: Insert pickup into database
       const pickupData = {
-        user_id: user?.id,
-        waste_category: scheduleForm.wasteCategory,
-        estimated_weight: parseFloat(scheduleForm.estimatedWeight),
-        pickup_address: scheduleForm.address,
-        scheduled_date: scheduleForm.scheduledDate,
-        special_instructions: scheduleForm.specialInstructions,
-        status: 'pending',
+        user_id: user.id,
+        waste_type: scheduleForm.wasteType,
+        estimated_weight: scheduleForm.estimatedWeight ? parseFloat(scheduleForm.estimatedWeight) : null,
+        pickup_address: userAddress,
+        image_url: imageUrl,
+        special_instructions: scheduleForm.specialInstructions || null,
+        status: 'PENDING' as const,
         points_awarded: 0
       };
 
-      if (supabase && isSupabaseAvailable()) {
-        const { data, error } = await supabase
-          .from('pickups')
-          .insert([pickupData])
-          .select()
-          .single();
+      const { data, error } = await insertPickup(pickupData);
 
-        if (error) throw error;
-        
-        console.log('Pickup scheduled successfully:', data);
-      } else {
-        // Mock pickup creation
-        const mockPickup: Pickup = {
-          id: Date.now().toString(),
-          ...pickupData,
-          created_at: new Date().toISOString()
-        };
-        setPickups(prev => [mockPickup, ...prev]);
-      }
+      if (error) throw error;
+
+      console.log('Pickup scheduled successfully:', data);
+
+      // Step 4: Update user's pickup count
+      await supabaseClient
+        .from('profiles')
+        .update({
+          total_pickups: (userStats.totalPickups || 0) + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      // Success notification
+      setPickupSuccess('Pickup Scheduled Successfully! Our team will contact you soon.');
 
       // Reset form and close modal
       setScheduleForm({
-        wasteCategory: '',
+        wasteType: '',
+        image: null,
         estimatedWeight: '',
-        address: '',
-        scheduledDate: '',
-        specialInstructions: '',
-        photos: []
+        specialInstructions: ''
       });
-      setShowScheduleModal(false);
-      
+
+      setTimeout(() => {
+        setShowScheduleModal(false);
+        setPickupSuccess(null);
+      }, 2000);
+
       // Refresh data
       fetchUserData();
     } catch (error) {
       console.error('Error scheduling pickup:', error);
+      alert('Error scheduling pickup: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
-      setIsLoading(false);
+      setUploadingPickup(false);
     }
   };
 
@@ -185,7 +214,7 @@ const HouseholdDashboard: React.FC = () => {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'organic': return '🥬';
+      case 'organic': return '����';
       case 'plastic': return '♻️';
       case 'paper': return '📄';
       case 'electronic': return '🔌';
