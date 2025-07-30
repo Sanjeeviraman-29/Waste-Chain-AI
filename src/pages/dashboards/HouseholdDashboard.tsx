@@ -570,9 +570,9 @@ const HouseholdDashboard: React.FC = () => {
                       <tr key={pickup.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <span className="text-lg mr-3">{getCategoryIcon(pickup.type)}</span>
+                            <span className="text-lg mr-3">{getCategoryIcon(getPickupType(pickup))}</span>
                             <span className="font-medium text-gray-900">
-                              {pickup.type}
+                              {getPickupType(pickup)}
                             </span>
                           </div>
                         </td>
