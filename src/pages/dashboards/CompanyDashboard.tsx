@@ -48,29 +48,12 @@ interface CompanyStats {
 // Use standardized database types
 type EPRCredit = Tables<'epr_credits'>;
 
-interface CreditDigitalTrail {
-  id: string;
-  credit_type: string;
-  description: string;
-  weight_kg: number;
-  material_type: string;
-  pickup_id: string | null;
-  pickups?: {
-    id: string;
-    user_id: string;
-    waste_type: string;
-    pickup_address: string;
-    image_url: string | null;
-    status: string;
-    created_at: string;
-  } | null;
-  ledger_entries?: Array<{
-    id: string;
-    transaction_type: string;
-    amount: number | null;
-    created_at: string;
-    transaction_data: any;
-  }>;
+type LedgerEntry = Tables<'ledger_entries'>;
+type Pickup = Tables<'pickups'>;
+
+interface CreditDigitalTrail extends EPRCredit {
+  pickups?: Pickup | null;
+  ledger_entries?: LedgerEntry[];
 }
 
 const CompanyDashboard: React.FC = () => {
