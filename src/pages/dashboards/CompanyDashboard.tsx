@@ -70,7 +70,7 @@ interface CreditDigitalTrail {
   pickups?: {
     id: string;
     user_id: string;
-    type: string;
+    waste_type: string;
     pickup_address: string;
     image_url: string | null;
     status: string;
