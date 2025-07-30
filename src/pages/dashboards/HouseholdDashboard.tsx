@@ -79,21 +79,23 @@ const HouseholdDashboard: React.FC = () => {
   const fetchUserData = async () => {
     try {
       setIsLoading(true);
-      
-      if (supabase && isSupabaseAvailable() && user) {
-        // Fetch user pickups
-        const { data: pickupsData, error: pickupsError } = await supabase
+
+      if (user) {
+        // Fetch user pickups from live database
+        const { data: pickupsData, error: pickupsError } = await supabaseClient
           .from('pickups')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
         if (!pickupsError && pickupsData) {
-          setPickups(pickupsData);
+          setPickups(pickupsData as Pickup[]);
+        } else {
+          console.error('Error fetching pickups:', pickupsError);
         }
 
         // Fetch user profile for stats
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await supabaseClient
           .from('profiles')
           .select('*')
           .eq('id', user.id)
@@ -106,42 +108,9 @@ const HouseholdDashboard: React.FC = () => {
             weeklyStreak: profileData.weekly_streak || prev.weeklyStreak,
             totalPickups: profileData.total_pickups || prev.totalPickups
           }));
+        } else {
+          console.error('Error fetching profile:', profileError);
         }
-      } else {
-        // Mock data for demo mode
-        const mockPickups: Pickup[] = [
-          {
-            id: '1',
-            waste_category: 'plastic',
-            estimated_weight: 5.2,
-            status: 'completed',
-            pickup_address: '123 Green Street, Chennai',
-            scheduled_date: '2024-01-15T10:00:00Z',
-            points_awarded: 52,
-            created_at: '2024-01-14T09:00:00Z'
-          },
-          {
-            id: '2',
-            waste_category: 'organic',
-            estimated_weight: 8.5,
-            status: 'pending',
-            pickup_address: '123 Green Street, Chennai',
-            scheduled_date: '2024-01-18T14:00:00Z',
-            points_awarded: 0,
-            created_at: '2024-01-16T11:30:00Z'
-          },
-          {
-            id: '3',
-            waste_category: 'paper',
-            estimated_weight: 3.2,
-            status: 'collected',
-            pickup_address: '123 Green Street, Chennai',
-            scheduled_date: '2024-01-12T09:30:00Z',
-            points_awarded: 32,
-            created_at: '2024-01-11T16:45:00Z'
-          }
-        ];
-        setPickups(mockPickups);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
