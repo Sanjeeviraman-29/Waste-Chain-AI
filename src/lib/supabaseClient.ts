@@ -354,7 +354,7 @@ export const validateDatabaseSchema = async () => {
     // Test pickups table structure
     const { data: pickupsTest, error: pickupsError } = await supabaseClient
       .from('pickups')
-      .select('id, user_id, waste_type, image_url, status, created_at')
+      .select('id, user_id, type, image_url, status, created_at')
       .limit(1);
 
     if (pickupsError) {
