@@ -24,17 +24,8 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { supabaseClient, uploadImage, insertPickup, type Tables } from '../../lib/supabaseClient';
 
-interface Pickup {
-  id: string;
-  waste_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
-  estimated_weight: number | null;
-  status: 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COLLECTED' | 'PROCESSED' | 'COMPLETED' | 'CANCELLED';
-  pickup_address: string;
-  image_url: string | null;
-  scheduled_date: string | null;
-  points_awarded: number;
-  created_at: string;
-}
+// Use the standardized database types
+type Pickup = Tables<'pickups'>;
 
 interface UserStats {
   greenPoints: number;
@@ -127,7 +118,7 @@ const HouseholdDashboard: React.FC = () => {
             console.log('User object:', { id: user.id, email: user.email, role: user.role });
             // Create a default profile for new users
             try {
-              const defaultProfile = {
+              const defaultProfile: Database['public']['Tables']['profiles']['Insert'] = {
                 id: user.id,
                 email: user.email || '',
                 full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
@@ -255,14 +246,14 @@ const HouseholdDashboard: React.FC = () => {
         : 'Address not provided';
 
       // Step 3: Insert pickup into database
-      const pickupData = {
+      const pickupData: Database['public']['Tables']['pickups']['Insert'] = {
         user_id: user.id,
         waste_type: scheduleForm.wasteType,
         estimated_weight: scheduleForm.estimatedWeight ? parseFloat(scheduleForm.estimatedWeight) : null,
         pickup_address: userAddress,
         image_url: imageUrl,
         special_instructions: scheduleForm.specialInstructions || null,
-        status: 'PENDING' as const,
+        status: 'PENDING',
         points_awarded: 0
       };
 
@@ -581,7 +572,7 @@ const HouseholdDashboard: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <Award className="w-4 h-4 text-green-500 mr-1" />
-                            <span className="font-medium text-gray-900">{pickup.points_awarded}</span>
+                            <span className="font-medium text-gray-900">{pickup.points_awarded || 0}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
