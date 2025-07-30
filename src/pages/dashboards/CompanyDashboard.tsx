@@ -615,10 +615,10 @@ const CompanyDashboard: React.FC = () => {
                       {/* Credit Details */}
                       <div className="bg-purple-50 rounded-lg p-4 mb-6">
                         <div className="flex items-center space-x-3">
-                          <span className="text-2xl">{selectedCreditTrail.material_type === 'Plastic' ? '♻️' : '🔌'}</span>
+                          <span className="text-2xl">{selectedCreditTrail.type === 'Plastic' ? '♻️' : '🔌'}</span>
                           <div>
                             <h3 className="font-semibold text-gray-900">{selectedCreditTrail.description}</h3>
-                            <p className="text-sm text-gray-600">{selectedCreditTrail.weight_kg}kg {selectedCreditTrail.material_type}</p>
+                            <p className="text-sm text-gray-600">{selectedCreditTrail.weight_kg}kg {selectedCreditTrail.type}</p>
                           </div>
                         </div>
                       </div>
