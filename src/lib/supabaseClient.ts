@@ -333,3 +333,69 @@ export const purchaseEPRCredit = async (creditId: string, companyId: string) => 
     throw error;
   }
 };
+
+// Schema validation function to test database connectivity
+export const validateDatabaseSchema = async () => {
+  try {
+    console.log('🔍 Testing database schema alignment...');
+
+    // Test profiles table structure
+    const { data: profilesTest, error: profilesError } = await supabaseClient
+      .from('profiles')
+      .select('id, email, full_name, created_at')
+      .limit(1);
+
+    if (profilesError) {
+      console.error('❌ Profiles table test failed:', profilesError);
+    } else {
+      console.log('✅ Profiles table schema OK');
+    }
+
+    // Test pickups table structure
+    const { data: pickupsTest, error: pickupsError } = await supabaseClient
+      .from('pickups')
+      .select('id, user_id, waste_type, image_url, status, created_at')
+      .limit(1);
+
+    if (pickupsError) {
+      console.error('❌ Pickups table test failed:', pickupsError);
+    } else {
+      console.log('✅ Pickups table schema OK');
+    }
+
+    // Test epr_credits table structure
+    const { data: creditsTest, error: creditsError } = await supabaseClient
+      .from('epr_credits')
+      .select('id, material_type, weight_kg, price, status, created_at')
+      .limit(1);
+
+    if (creditsError) {
+      console.error('❌ EPR Credits table test failed:', creditsError);
+    } else {
+      console.log('✅ EPR Credits table schema OK');
+    }
+
+    // Test storage bucket access
+    const { data: storageTest, error: storageError } = await supabaseClient.storage
+      .from('waste-images')
+      .list('', { limit: 1 });
+
+    if (storageError) {
+      console.error('❌ Storage bucket test failed:', storageError);
+    } else {
+      console.log('✅ Storage bucket access OK');
+    }
+
+    console.log('🎉 Schema validation complete!');
+
+    return {
+      profiles: !profilesError,
+      pickups: !pickupsError,
+      epr_credits: !creditsError,
+      storage: !storageError
+    };
+  } catch (error) {
+    console.error('❌ Schema validation failed:', error);
+    return null;
+  }
+};
