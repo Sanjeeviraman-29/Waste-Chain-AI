@@ -80,6 +80,13 @@ const HouseholdDashboard: React.FC = () => {
           setPickups([]);
           // Keep existing demo stats
         } else {
+          // Validate schema before proceeding
+          console.log('🔍 Validating database schema...');
+          const schemaValidation = await validateDatabaseSchema();
+
+          if (schemaValidation) {
+            console.log('Schema validation result:', schemaValidation);
+          }
           // Real user - fetch from database
           // Fetch user pickups from live database
           const { data: pickupsData, error: pickupsError } = await supabaseClient
@@ -495,7 +502,7 @@ const HouseholdDashboard: React.FC = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { category: 'Organic', label: 'Organic', color: 'green', icon: '🥬' },
+                  { category: 'Organic', label: 'Organic', color: 'green', icon: '����' },
                   { category: 'Plastic', label: 'Plastic', color: 'blue', icon: '♻️' },
                   { category: 'Paper', label: 'Paper', color: 'yellow', icon: '📄' },
                   { category: 'E-Waste', label: 'E-Waste', color: 'purple', icon: '🔌' }
