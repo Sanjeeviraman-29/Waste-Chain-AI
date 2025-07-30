@@ -257,62 +257,97 @@ export const uploadImage = async (file: File, path: string): Promise<{ url: stri
 
 export const insertPickup = async (pickupData: any) => {
   try {
-    console.log('🔄 Starting adaptive pickup insertion...');
+    console.log('🔄 Starting agnostic pickup insertion...');
     console.log('Original pickup data:', pickupData);
 
-    // First, detect the actual column structure
-    const wasteTypeColumn = await getWasteTypeColumn();
-    const allColumns = await detectTableColumns('pickups');
-
-    console.log('Detected waste type column:', wasteTypeColumn);
-    console.log('All detected columns:', allColumns);
-
-    // Create adaptive data object using detected columns
-    const adaptiveData: any = {
-      user_id: pickupData.user_id,
-      [wasteTypeColumn]: pickupData.type || pickupData.waste_type || pickupData.wasteType,
-      status: pickupData.status || 'PENDING'
+    // Try a minimalist approach - only use essential fields
+    const minimalData: any = {
+      user_id: pickupData.user_id
     };
 
-    // Add other fields if they exist in the table
-    const fieldMappings: { [key: string]: string[] } = {
-      estimated_weight: ['estimated_weight', 'weight', 'estimated_kg'],
-      pickup_address: ['pickup_address', 'address', 'location'],
-      image_url: ['image_url', 'image', 'photo_url'],
-      special_instructions: ['special_instructions', 'instructions', 'notes'],
-      points_awarded: ['points_awarded', 'points', 'reward_points'],
-      scheduled_date: ['scheduled_date', 'pickup_date', 'date'],
-    };
-
-    // Map fields based on what exists in the database
-    Object.entries(fieldMappings).forEach(([dataField, possibleColumns]) => {
-      const matchingColumn = possibleColumns.find(col => allColumns.includes(col));
-      if (matchingColumn && pickupData[dataField] !== undefined) {
-        adaptiveData[matchingColumn] = pickupData[dataField];
-      }
-    });
-
-    // Add timestamps if they exist
-    if (allColumns.includes('created_at')) {
-      adaptiveData.created_at = new Date().toISOString();
-    }
-    if (allColumns.includes('updated_at')) {
-      adaptiveData.updated_at = new Date().toISOString();
+    // Add status if provided
+    if (pickupData.status) {
+      minimalData.status = pickupData.status;
     }
 
-    console.log('Adaptive pickup data for insertion:', adaptiveData);
+    console.log('Attempting insertion with minimal data:', minimalData);
 
-    const result = await supabaseClient
+    // Try inserting with just essential fields first
+    let result = await supabaseClient
       .from('pickups')
-      .insert([adaptiveData])
+      .insert([minimalData])
       .select()
       .single();
 
-    console.log('✅ Pickup insertion successful:', result);
+    console.log('✅ Minimal pickup insertion successful:', result);
+
+    // If successful, try to update with additional fields if the record was created
+    if (result.data && result.data.id) {
+      console.log('🔄 Attempting to update with additional fields...');
+
+      const updateData: any = {};
+
+      // Try adding waste type field with various names
+      const wasteTypeValue = pickupData.type || pickupData.waste_type || pickupData.wasteType || pickupData.category;
+      if (wasteTypeValue) {
+        // Try different column names for waste type
+        const wasteTypeFields = ['type', 'waste_type', 'category', 'kind', 'material'];
+        for (const field of wasteTypeFields) {
+          try {
+            const testUpdate = { [field]: wasteTypeValue };
+            await supabaseClient
+              .from('pickups')
+              .update(testUpdate)
+              .eq('id', result.data.id);
+            console.log(`✅ Successfully updated ${field} field`);
+            updateData[field] = wasteTypeValue;
+            break;
+          } catch (e) {
+            console.log(`⚠️ Field ${field} not available`);
+            continue;
+          }
+        }
+      }
+
+      // Try adding other common fields
+      const fieldMappings: { [key: string]: any } = {
+        image_url: pickupData.image_url,
+        pickup_address: pickupData.pickup_address,
+        estimated_weight: pickupData.estimated_weight,
+        special_instructions: pickupData.special_instructions,
+        points_awarded: pickupData.points_awarded || 0
+      };
+
+      for (const [field, value] of Object.entries(fieldMappings)) {
+        if (value !== undefined) {
+          try {
+            await supabaseClient
+              .from('pickups')
+              .update({ [field]: value })
+              .eq('id', result.data.id);
+            console.log(`✅ Successfully updated ${field} field`);
+            updateData[field] = value;
+          } catch (e) {
+            console.log(`⚠️ Field ${field} not available`);
+          }
+        }
+      }
+
+      // Get the final updated record
+      const { data: updatedRecord } = await supabaseClient
+        .from('pickups')
+        .select('*')
+        .eq('id', result.data.id)
+        .single();
+
+      console.log('✅ Final pickup record:', updatedRecord);
+      return { data: updatedRecord, error: null };
+    }
+
     return result;
 
   } catch (error) {
-    console.error('❌ Adaptive pickup insertion failed:', error);
+    console.error('❌ Agnostic pickup insertion failed:', error);
 
     // Enhanced error logging
     if (error && typeof error === 'object') {
