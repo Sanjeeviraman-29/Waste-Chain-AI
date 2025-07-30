@@ -15,7 +15,7 @@ import {
   Calendar,
   FileText
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabaseClient } from '../../lib/supabaseClient';
 
 interface EPRCredit {
   id: string;
