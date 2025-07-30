@@ -22,7 +22,7 @@ import {
   Badge
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase, isSupabaseAvailable } from '../../lib/supabase';
+import { supabaseClient, uploadImage, insertPickup, type Tables } from '../../lib/supabaseClient';
 
 interface Pickup {
   id: string;
