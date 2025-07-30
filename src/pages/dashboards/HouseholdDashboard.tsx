@@ -161,11 +161,21 @@ const HouseholdDashboard: React.FC = () => {
                 console.log('Default profile created successfully');
               }
             } catch (createError) {
-              const errorMsg = createError instanceof Error ? createError.message :
-                (typeof createError === 'object' && createError !== null) ?
-                  JSON.stringify(createError, null, 2) : String(createError);
-              console.error('Failed to create default profile:', errorMsg);
-              console.error('Full error object:', createError);
+              console.error('Failed to create default profile:');
+              console.error('- Type:', typeof createError);
+              console.error('- Is Error instance:', createError instanceof Error);
+
+              if (createError instanceof Error) {
+                console.error('- Error message:', createError.message);
+              } else if (typeof createError === 'object' && createError !== null) {
+                const supabaseError = createError as any;
+                console.error('- Message:', supabaseError?.message);
+                console.error('- Code:', supabaseError?.code);
+                console.error('- Details:', supabaseError?.details);
+                console.error('- Hint:', supabaseError?.hint);
+              }
+
+              console.error('Full error JSON:', JSON.stringify(createError, null, 2));
             }
           }
         }
