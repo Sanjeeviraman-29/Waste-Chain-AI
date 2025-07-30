@@ -13,7 +13,7 @@ export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Database types for EPR system
+// Database types for EPR system - Aligned with standard Supabase patterns
 export interface Database {
   public: {
     Tables: {
@@ -26,9 +26,9 @@ export interface Database {
           address: string | null;
           city: string | null;
           postal_code: string | null;
-          green_points: number;
-          weekly_streak: number;
-          total_pickups: number;
+          green_points: number | null;
+          weekly_streak: number | null;
+          total_pickups: number | null;
           last_pickup_date: string | null;
           created_at: string;
           updated_at: string;
@@ -41,9 +41,9 @@ export interface Database {
           address?: string | null;
           city?: string | null;
           postal_code?: string | null;
-          green_points?: number;
-          weekly_streak?: number;
-          total_pickups?: number;
+          green_points?: number | null;
+          weekly_streak?: number | null;
+          total_pickups?: number | null;
           last_pickup_date?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -56,9 +56,9 @@ export interface Database {
           address?: string | null;
           city?: string | null;
           postal_code?: string | null;
-          green_points?: number;
-          weekly_streak?: number;
-          total_pickups?: number;
+          green_points?: number | null;
+          weekly_streak?: number | null;
+          total_pickups?: number | null;
           last_pickup_date?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -69,10 +69,10 @@ export interface Database {
           id: string;
           user_id: string;
           collector_id: string | null;
-          waste_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+          waste_type: string;
           estimated_weight: number | null;
           actual_weight: number | null;
-          status: 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COLLECTED' | 'PROCESSED' | 'COMPLETED' | 'CANCELLED';
+          status: string;
           pickup_address: string;
           pickup_coordinates: unknown | null;
           image_url: string | null;
@@ -82,7 +82,7 @@ export interface Database {
           completed_date: string | null;
           special_instructions: string | null;
           ai_verification_score: number | null;
-          points_awarded: number;
+          points_awarded: number | null;
           epr_credit_id: string | null;
           created_at: string;
           updated_at: string;
@@ -91,10 +91,10 @@ export interface Database {
           id?: string;
           user_id: string;
           collector_id?: string | null;
-          waste_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+          waste_type: string;
           estimated_weight?: number | null;
           actual_weight?: number | null;
-          status?: 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COLLECTED' | 'PROCESSED' | 'COMPLETED' | 'CANCELLED';
+          status?: string;
           pickup_address: string;
           pickup_coordinates?: unknown | null;
           image_url?: string | null;
@@ -104,7 +104,7 @@ export interface Database {
           completed_date?: string | null;
           special_instructions?: string | null;
           ai_verification_score?: number | null;
-          points_awarded?: number;
+          points_awarded?: number | null;
           epr_credit_id?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -113,10 +113,10 @@ export interface Database {
           id?: string;
           user_id?: string;
           collector_id?: string | null;
-          waste_type?: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+          waste_type?: string;
           estimated_weight?: number | null;
           actual_weight?: number | null;
-          status?: 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COLLECTED' | 'PROCESSED' | 'COMPLETED' | 'CANCELLED';
+          status?: string;
           pickup_address?: string;
           pickup_coordinates?: unknown | null;
           image_url?: string | null;
@@ -126,7 +126,7 @@ export interface Database {
           completed_date?: string | null;
           special_instructions?: string | null;
           ai_verification_score?: number | null;
-          points_awarded?: number;
+          points_awarded?: number | null;
           epr_credit_id?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -138,9 +138,9 @@ export interface Database {
           credit_type: string;
           description: string;
           weight_kg: number;
-          material_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+          material_type: string;
           price: number;
-          status: 'AVAILABLE' | 'SOLD' | 'RETIRED';
+          status: string;
           company_id: string | null;
           pickup_id: string | null;
           certificate_url: string | null;
@@ -152,9 +152,9 @@ export interface Database {
           credit_type: string;
           description: string;
           weight_kg: number;
-          material_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+          material_type: string;
           price: number;
-          status?: 'AVAILABLE' | 'SOLD' | 'RETIRED';
+          status?: string;
           company_id?: string | null;
           pickup_id?: string | null;
           certificate_url?: string | null;
@@ -166,9 +166,9 @@ export interface Database {
           credit_type?: string;
           description?: string;
           weight_kg?: number;
-          material_type?: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+          material_type?: string;
           price?: number;
-          status?: 'AVAILABLE' | 'SOLD' | 'RETIRED';
+          status?: string;
           company_id?: string | null;
           pickup_id?: string | null;
           certificate_url?: string | null;
@@ -182,11 +182,11 @@ export interface Database {
           user_id: string;
           pickup_id: string | null;
           epr_credit_id: string | null;
-          transaction_type: 'pickup_created' | 'pickup_completed' | 'credit_purchased' | 'credit_retired' | 'points_awarded';
+          transaction_type: string;
           points_change: number | null;
           amount: number | null;
           balance_after: number | null;
-          transaction_data: Record<string, any>;
+          transaction_data: Record<string, any> | null;
           created_at: string;
         };
         Insert: {
@@ -194,11 +194,11 @@ export interface Database {
           user_id: string;
           pickup_id?: string | null;
           epr_credit_id?: string | null;
-          transaction_type: 'pickup_created' | 'pickup_completed' | 'credit_purchased' | 'credit_retired' | 'points_awarded';
+          transaction_type: string;
           points_change?: number | null;
           amount?: number | null;
           balance_after?: number | null;
-          transaction_data?: Record<string, any>;
+          transaction_data?: Record<string, any> | null;
           created_at?: string;
         };
         Update: {
@@ -206,11 +206,11 @@ export interface Database {
           user_id?: string;
           pickup_id?: string | null;
           epr_credit_id?: string | null;
-          transaction_type?: 'pickup_created' | 'pickup_completed' | 'credit_purchased' | 'credit_retired' | 'points_awarded';
+          transaction_type?: string;
           points_change?: number | null;
           amount?: number | null;
           balance_after?: number | null;
-          transaction_data?: Record<string, any>;
+          transaction_data?: Record<string, any> | null;
           created_at?: string;
         };
       };
@@ -220,75 +220,116 @@ export interface Database {
 
 export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
 
-// Helper functions for common operations
+// Helper functions for common operations with proper error handling
 export const uploadImage = async (file: File, path: string): Promise<{ url: string | null; error: Error | null }> => {
   try {
+    console.log('Uploading image to path:', path);
+    
     const { data, error } = await supabaseClient.storage
       .from('waste-images')
-      .upload(path, file);
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Storage upload error:', error);
+      throw error;
+    }
 
+    console.log('Upload successful, getting public URL for:', data.path);
+    
     const { data: { publicUrl } } = supabaseClient.storage
       .from('waste-images')
       .getPublicUrl(data.path);
 
+    console.log('Public URL generated:', publicUrl);
+    
     return { url: publicUrl, error: null };
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message :
-      (typeof error === 'object' && error !== null) ?
-        JSON.stringify(error, null, 2) : String(error);
-    console.error('Error uploading image:', errorMsg);
-    console.error('Full error object:', error);
+    console.error('Upload error details:');
+    console.error('- Type:', typeof error);
+    console.error('- Message:', error instanceof Error ? error.message : 'Unknown');
+    console.error('- Full error:', error);
     return { url: null, error: error as Error };
   }
 };
 
 export const insertPickup = async (pickupData: Database['public']['Tables']['pickups']['Insert']) => {
-  return await supabaseClient
-    .from('pickups')
-    .insert([pickupData])
-    .select()
-    .single();
+  try {
+    console.log('Inserting pickup with data:', pickupData);
+    
+    const result = await supabaseClient
+      .from('pickups')
+      .insert([pickupData])
+      .select()
+      .single();
+    
+    console.log('Pickup insertion result:', result);
+    return result;
+  } catch (error) {
+    console.error('Pickup insertion failed:', error);
+    throw error;
+  }
 };
 
 export const getAvailableEPRCredits = async () => {
-  return await supabaseClient
-    .from('epr_credits')
-    .select('*')
-    .eq('status', 'AVAILABLE')
-    .order('created_at', { ascending: false });
+  try {
+    return await supabaseClient
+      .from('epr_credits')
+      .select('*')
+      .eq('status', 'AVAILABLE')
+      .order('created_at', { ascending: false });
+  } catch (error) {
+    console.error('Failed to fetch EPR credits:', error);
+    throw error;
+  }
 };
 
 export const getCompanyCredits = async (companyId: string) => {
-  return await supabaseClient
-    .from('epr_credits')
-    .select('*')
-    .eq('company_id', companyId)
-    .eq('status', 'SOLD')
-    .order('updated_at', { ascending: false });
+  try {
+    return await supabaseClient
+      .from('epr_credits')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('status', 'SOLD')
+      .order('updated_at', { ascending: false });
+  } catch (error) {
+    console.error('Failed to fetch company credits:', error);
+    throw error;
+  }
 };
 
 export const getCreditDigitalTrail = async (creditId: string) => {
-  const { data: credit } = await supabaseClient
-    .from('epr_credits')
-    .select(`
-      *,
-      pickups(*),
-      ledger_entries(*)
-    `)
-    .eq('id', creditId)
-    .single();
+  try {
+    const { data: credit } = await supabaseClient
+      .from('epr_credits')
+      .select(`
+        *,
+        pickups(*),
+        ledger_entries(*)
+      `)
+      .eq('id', creditId)
+      .single();
 
-  return credit;
+    return credit;
+  } catch (error) {
+    console.error('Failed to fetch credit digital trail:', error);
+    throw error;
+  }
 };
 
 export const purchaseEPRCredit = async (creditId: string, companyId: string) => {
-  const { data, error } = await supabaseClient.rpc('purchase_epr_credit', {
-    credit_id: creditId,
-    company_id: companyId
-  });
+  try {
+    const { data, error } = await supabaseClient.rpc('purchase_epr_credit', {
+      credit_id: creditId,
+      company_id: companyId
+    });
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Failed to purchase EPR credit:', error);
+    throw error;
+  }
 };
