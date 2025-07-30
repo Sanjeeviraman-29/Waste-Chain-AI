@@ -106,37 +106,7 @@ const CompanyDashboard: React.FC = () => {
     end: new Date().toISOString().split('T')[0]
   });
 
-  const creditPackages: CreditPackage[] = [
-    {
-      id: 'starter',
-      name: 'Starter Package',
-      credits: 100,
-      price: 15000,
-      description: 'Perfect for small businesses starting their EPR journey'
-    },
-    {
-      id: 'professional',
-      name: 'Professional Package',
-      credits: 500,
-      price: 65000,
-      description: 'Ideal for medium-sized companies with regular waste generation',
-      popular: true
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise Package',
-      credits: 1000,
-      price: 120000,
-      description: 'Comprehensive solution for large corporations'
-    },
-    {
-      id: 'custom',
-      name: 'Custom Package',
-      credits: 0,
-      price: 0,
-      description: 'Tailored solution based on your specific requirements'
-    }
-  ];
+
 
   useEffect(() => {
     fetchCompanyData();
