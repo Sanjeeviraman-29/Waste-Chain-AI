@@ -356,17 +356,17 @@ const HouseholdDashboard: React.FC = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { category: 'organic', label: 'Organic', color: 'green', icon: '🥬' },
-                  { category: 'plastic', label: 'Plastic', color: 'blue', icon: '♻️' },
-                  { category: 'paper', label: 'Paper', color: 'yellow', icon: '📄' },
-                  { category: 'electronic', label: 'Electronic', color: 'purple', icon: '🔌' }
+                  { category: 'Organic', label: 'Organic', color: 'green', icon: '🥬' },
+                  { category: 'Plastic', label: 'Plastic', color: 'blue', icon: '♻️' },
+                  { category: 'Paper', label: 'Paper', color: 'yellow', icon: '📄' },
+                  { category: 'E-Waste', label: 'E-Waste', color: 'purple', icon: '🔌' }
                 ].map((type) => (
                   <motion.div
                     key={type.category}
                     whileHover={{ scale: 1.02 }}
                     className="p-4 border border-gray-200 rounded-lg text-center hover:border-green-300 transition-colors duration-200 cursor-pointer"
                     onClick={() => {
-                      setScheduleForm(prev => ({ ...prev, wasteCategory: type.category }));
+                      setScheduleForm(prev => ({ ...prev, wasteType: type.category as any }));
                       setShowScheduleModal(true);
                     }}
                   >
