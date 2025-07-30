@@ -3,8 +3,20 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Create a placeholder client when environment variables are missing
-export const supabase = supabaseUrl && supabaseAnonKey
+// Helper function to validate Supabase configuration
+const isValidSupabaseConfig = (url: string, key: string): boolean => {
+  return url &&
+         key &&
+         url.trim() !== '' &&
+         key.trim() !== '' &&
+         url.includes('supabase.co') &&
+         !url.includes('demo') &&
+         key.length > 20 && // Real keys are much longer
+         !key.includes('demo');
+};
+
+// Create a placeholder client when environment variables are missing or invalid
+export const supabase = isValidSupabaseConfig(supabaseUrl, supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
