@@ -351,14 +351,34 @@ export const validateDatabaseSchema = async () => {
       console.log('✅ Profiles table schema OK');
     }
 
-    // Test pickups table structure
-    const { data: pickupsTest, error: pickupsError } = await supabaseClient
+    // Test pickups table structure - try different column name variations
+    let pickupsError = null;
+    let pickupsTest = null;
+
+    // First try with 'type' column
+    const typeResult = await supabaseClient
       .from('pickups')
       .select('id, user_id, type, image_url, status, created_at')
       .limit(1);
 
+    if (typeResult.error) {
+      console.log('Testing with waste_type column...');
+      // If 'type' fails, try 'waste_type'
+      const wasteTypeResult = await supabaseClient
+        .from('pickups')
+        .select('id, user_id, waste_type, image_url, status, created_at')
+        .limit(1);
+
+      pickupsError = wasteTypeResult.error;
+      pickupsTest = wasteTypeResult.data;
+    } else {
+      pickupsError = typeResult.error;
+      pickupsTest = typeResult.data;
+    }
+
     if (pickupsError) {
       console.error('❌ Pickups table test failed:', pickupsError);
+      console.log('💡 Your pickups table may use a different column name for waste type');
     } else {
       console.log('✅ Pickups table schema OK');
     }
