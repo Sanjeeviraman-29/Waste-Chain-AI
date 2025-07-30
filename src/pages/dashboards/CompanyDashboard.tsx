@@ -483,9 +483,9 @@ const CompanyDashboard: React.FC = () => {
                             className="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-all duration-200"
                           >
                             <div className="flex items-center justify-between mb-3">
-                              <span className="text-lg">{credit.type === 'Plastic' ? '♻️' : credit.type === 'E-Waste' ? '🔌' : credit.type === 'Paper' ? '📄' : '🥬'}</span>
+                              <span className="text-lg">{credit.material_type === 'Plastic' ? '♻️' : credit.material_type === 'E-Waste' ? '🔌' : credit.material_type === 'Paper' ? '📄' : '🥬'}</span>
                               <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                                {credit.type}
+                                {credit.material_type}
                               </span>
                             </div>
                             <h4 className="font-semibold text-gray-900 mb-2">{credit.description}</h4>
