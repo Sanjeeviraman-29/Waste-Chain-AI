@@ -616,68 +616,131 @@ const CompanyDashboard: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Transaction History */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="bg-white rounded-xl border border-gray-200 shadow-sm"
-            >
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">Transaction History</h2>
-                <p className="text-gray-600 text-sm mt-1">Track your EPR credit purchases</p>
-              </div>
+            {/* Digital Trail Modal */}
+            <AnimatePresence>
+              {showDigitalTrail && selectedCreditTrail && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+                  >
+                    <div className="p-6 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-semibold text-gray-900">Digital Trail</h2>
+                        <button
+                          onClick={() => setShowDigitalTrail(false)}
+                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <p className="text-gray-600 text-sm mt-1">Complete journey of EPR Credit #{selectedCreditTrail.id.slice(-8).toUpperCase()}</p>
+                    </div>
 
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Transaction ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Credits
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {transactions.map((transaction) => (
-                      <tr key={transaction.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          #{transaction.id.slice(-6).toUpperCase()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <Award className="w-4 h-4 text-purple-500 mr-2" />
-                            <span className="font-medium text-gray-900">{transaction.credits_purchased}</span>
+                    <div className="p-6">
+                      {/* Credit Details */}
+                      <div className="bg-purple-50 rounded-lg p-4 mb-6">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">{selectedCreditTrail.material_type === 'Plastic' ? '♻️' : '🔌'}</span>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{selectedCreditTrail.description}</h3>
+                            <p className="text-sm text-gray-600">{selectedCreditTrail.weight_kg}kg {selectedCreditTrail.material_type}</p>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ₹{transaction.amount_paid.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 capitalize">
-                            {transaction.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {new Date(transaction.transaction_date).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
+                        </div>
+                      </div>
+
+                      {/* Trail Timeline */}
+                      <div className="space-y-6">
+                        <h4 className="font-medium text-gray-900">Complete Digital Trail</h4>
+
+                        {/* Household Pickup */}
+                        {selectedCreditTrail.pickups && (
+                          <div className="flex items-start space-x-4">
+                            <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                              <Home className="w-4 h-4 text-green-600" />
+                            </div>
+                            <div className="flex-1">
+                              <h5 className="font-medium text-gray-900">Household Pickup</h5>
+                              <p className="text-sm text-gray-600 mt-1">
+                                Collected from: {selectedCreditTrail.pickups.pickup_address}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Date: {new Date(selectedCreditTrail.pickups.created_at).toLocaleDateString()}
+                              </p>
+                              {selectedCreditTrail.pickups.image_url && (
+                                <img
+                                  src={selectedCreditTrail.pickups.image_url}
+                                  alt="Waste pickup"
+                                  className="mt-2 w-24 h-24 object-cover rounded-lg border"
+                                />
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Processing */}
+                        <div className="flex items-start space-x-4">
+                          <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Recycle className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="font-medium text-gray-900">Recycling Processed</h5>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Material verified and processed for EPR credit generation
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Credit Generated */}
+                        <div className="flex items-start space-x-4">
+                          <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                            <Award className="w-4 h-4 text-purple-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="font-medium text-gray-900">EPR Credit Generated</h5>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Credit created and made available in marketplace
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Date: {new Date(selectedCreditTrail.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Company Purchase */}
+                        <div className="flex items-start space-x-4">
+                          <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <Building2 className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="font-medium text-gray-900">Company Purchase</h5>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Purchased by your company for EPR compliance
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Date: {new Date(selectedCreditTrail.updated_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Blockchain Verification */}
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <Shield className="w-5 h-5 text-gray-600" />
+                          <span className="font-medium text-gray-900">Blockchain Verified</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          This EPR credit is immutably recorded on the blockchain, ensuring transparency and preventing double-counting.
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Sidebar */}
