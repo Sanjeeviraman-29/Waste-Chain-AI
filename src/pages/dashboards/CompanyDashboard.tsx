@@ -50,7 +50,7 @@ interface EPRCredit {
   credit_type: string;
   description: string;
   weight_kg: number;
-  material_type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
+  type: 'Plastic' | 'E-Waste' | 'Paper' | 'Organic';
   price: number;
   status: 'AVAILABLE' | 'SOLD' | 'RETIRED';
   company_id: string | null;
