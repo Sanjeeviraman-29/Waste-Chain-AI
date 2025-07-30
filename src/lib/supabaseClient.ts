@@ -258,17 +258,45 @@ export const uploadImage = async (file: File, path: string): Promise<{ url: stri
 export const insertPickup = async (pickupData: Database['public']['Tables']['pickups']['Insert']) => {
   try {
     console.log('Inserting pickup with data:', pickupData);
-    
+
     const result = await supabaseClient
       .from('pickups')
       .insert([pickupData])
       .select()
       .single();
-    
+
     console.log('Pickup insertion result:', result);
     return result;
   } catch (error) {
     console.error('Pickup insertion failed:', error);
+
+    // If the error is about 'type' column not found, try with 'waste_type'
+    if (error && typeof error === 'object' && 'message' in error &&
+        typeof error.message === 'string' && error.message.includes('type')) {
+
+      console.log('Retrying with waste_type column...');
+      try {
+        // Convert 'type' to 'waste_type' and retry
+        const fallbackData = { ...pickupData };
+        if ('type' in fallbackData) {
+          (fallbackData as any).waste_type = fallbackData.type;
+          delete (fallbackData as any).type;
+        }
+
+        const retryResult = await supabaseClient
+          .from('pickups')
+          .insert([fallbackData])
+          .select()
+          .single();
+
+        console.log('Pickup insertion succeeded with waste_type:', retryResult);
+        return retryResult;
+      } catch (retryError) {
+        console.error('Retry with waste_type also failed:', retryError);
+        throw retryError;
+      }
+    }
+
     throw error;
   }
 };
