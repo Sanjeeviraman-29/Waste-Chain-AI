@@ -124,6 +124,7 @@ const HouseholdDashboard: React.FC = () => {
             // Continue with default stats if profile fetch fails
           } else {
             console.log('No profile found for user, creating default profile');
+            console.log('User object:', { id: user.id, email: user.email, role: user.role });
             // Create a default profile for new users
             try {
               const defaultProfile = {
@@ -142,6 +143,8 @@ const HouseholdDashboard: React.FC = () => {
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               };
+
+              console.log('Attempting to create profile:', defaultProfile);
 
               const { error: createError } = await supabaseClient
                 .from('profiles')
@@ -250,9 +253,19 @@ const HouseholdDashboard: React.FC = () => {
         points_awarded: 0
       };
 
+      console.log('Attempting to insert pickup:', pickupData);
       const { data, error } = await insertPickup(pickupData);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Pickup insertion error details:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          fullError: error
+        });
+        throw error;
+      }
 
       console.log('Pickup scheduled successfully:', data);
 
