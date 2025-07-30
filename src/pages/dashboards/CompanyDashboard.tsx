@@ -94,14 +94,13 @@ const CompanyDashboard: React.FC = () => {
     activePartners: 156,
     monthlySpend: 85400
   });
-  const [transactions, setTransactions] = useState<EPRTransaction[]>([]);
+  const [availableCredits, setAvailableCredits] = useState<EPRCredit[]>([]);
+  const [myCredits, setMyCredits] = useState<EPRCredit[]>([]);
+  const [activeTab, setActiveTab] = useState<'marketplace' | 'my-credits'>('marketplace');
   const [isLoading, setIsLoading] = useState(false);
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null);
-  const [purchaseForm, setPurchaseForm] = useState({
-    credits: '',
-    customAmount: false
-  });
+  const [showDigitalTrail, setShowDigitalTrail] = useState(false);
+  const [selectedCreditTrail, setSelectedCreditTrail] = useState<CreditDigitalTrail | null>(null);
+  const [purchasingCreditId, setPurchasingCreditId] = useState<string | null>(null);
   const [reportDateRange, setReportDateRange] = useState({
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
