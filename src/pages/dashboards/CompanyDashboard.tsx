@@ -31,7 +31,8 @@ import {
   getCompanyCredits,
   getCreditDigitalTrail,
   purchaseEPRCredit,
-  type Tables
+  type Tables,
+  type Database
 } from '../../lib/supabaseClient';
 // Import jsPDF for report generation
 import jsPDF from 'jspdf';
