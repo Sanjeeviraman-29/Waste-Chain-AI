@@ -248,7 +248,7 @@ const HouseholdDashboard: React.FC = () => {
       // Step 3: Insert pickup into database
       const pickupData: Database['public']['Tables']['pickups']['Insert'] = {
         user_id: user.id,
-        waste_type: scheduleForm.wasteType,
+        type: scheduleForm.wasteType,
         estimated_weight: scheduleForm.estimatedWeight ? parseFloat(scheduleForm.estimatedWeight) : null,
         pickup_address: userAddress,
         image_url: imageUrl,
@@ -555,9 +555,9 @@ const HouseholdDashboard: React.FC = () => {
                       <tr key={pickup.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <span className="text-lg mr-3">{getCategoryIcon(pickup.waste_type)}</span>
+                            <span className="text-lg mr-3">{getCategoryIcon(pickup.type)}</span>
                             <span className="font-medium text-gray-900">
-                              {pickup.waste_type}
+                              {pickup.type}
                             </span>
                           </div>
                         </td>
