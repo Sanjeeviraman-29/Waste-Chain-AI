@@ -549,7 +549,7 @@ const CompanyDashboard: React.FC = () => {
                               <tr key={credit.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="flex items-center">
-                                    <span className="text-lg mr-3">{credit.material_type === 'Plastic' ? '♻️' : credit.material_type === 'E-Waste' ? '🔌' : credit.material_type === 'Paper' ? '📄' : '🥬'}</span>
+                                    <span className="text-lg mr-3">{credit.type === 'Plastic' ? '♻️' : credit.type === 'E-Waste' ? '🔌' : credit.type === 'Paper' ? '📄' : '🥬'}</span>
                                     <div>
                                       <div className="text-sm font-medium text-gray-900">{credit.description}</div>
                                       <div className="text-sm text-gray-500">#{credit.id.slice(-8).toUpperCase()}</div>
