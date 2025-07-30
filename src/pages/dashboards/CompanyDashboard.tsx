@@ -445,63 +445,174 @@ const CompanyDashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Purchase EPR Credits */}
+            {/* EPR Credit Marketplace */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+              className="bg-white rounded-xl border border-gray-200 shadow-sm"
             >
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Purchase EPR Credits</h2>
-                  <p className="text-gray-600 text-sm mt-1">
-                    Stay compliant with Extended Producer Responsibility regulations
-                  </p>
+              {/* Tab Headers */}
+              <div className="border-b border-gray-200">
+                <div className="flex space-x-8 px-6 py-4">
+                  <button
+                    onClick={() => setActiveTab('marketplace')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                      activeTab === 'marketplace'
+                        ? 'border-purple-500 text-purple-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    EPR Credit Marketplace
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('my-credits')}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                      activeTab === 'my-credits'
+                        ? 'border-purple-500 text-purple-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    My Credits ({myCredits.length})
+                  </button>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowPurchaseModal(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  <span>Buy Credits</span>
-                </motion.button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {creditPackages.slice(0, 3).map((pkg) => (
-                  <motion.div
-                    key={pkg.id}
-                    whileHover={{ scale: 1.02 }}
-                    className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
-                      pkg.popular 
-                        ? 'border-purple-300 bg-purple-50 ring-2 ring-purple-200' 
-                        : 'border-gray-200 hover:border-purple-300'
-                    }`}
-                    onClick={() => {
-                      setSelectedPackage(pkg);
-                      setShowPurchaseModal(true);
-                    }}
-                  >
-                    {pkg.popular && (
-                      <div className="text-center mb-2">
-                        <span className="text-xs font-medium text-purple-700 bg-purple-200 px-2 py-1 rounded-full">
-                          Most Popular
-                        </span>
+              {/* Tab Content */}
+              <div className="p-6">
+                {activeTab === 'marketplace' ? (
+                  <div>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Available EPR Credits</h3>
+                      <p className="text-gray-600 text-sm">
+                        Purchase verified EPR credits from our certified waste collection network
+                      </p>
+                    </div>
+
+                    {isLoading ? (
+                      <div className="text-center py-8">
+                        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                        <p className="text-gray-600">Loading available credits...</p>
+                      </div>
+                    ) : availableCredits.length === 0 ? (
+                      <div className="text-center py-12">
+                        <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Credits Available</h3>
+                        <p className="text-gray-600">Check back later for new EPR credits</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {availableCredits.map((credit) => (
+                          <motion.div
+                            key={credit.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ scale: 1.02 }}
+                            className="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-all duration-200"
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-lg">{credit.material_type === 'Plastic' ? '♻️' : credit.material_type === 'E-Waste' ? '🔌' : credit.material_type === 'Paper' ? '📄' : '🥬'}</span>
+                              <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                                {credit.material_type}
+                              </span>
+                            </div>
+                            <h4 className="font-semibold text-gray-900 mb-2">{credit.description}</h4>
+                            <p className="text-sm text-gray-600 mb-3">{credit.weight_kg}kg verified waste</p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xl font-bold text-purple-600">₹{credit.price.toLocaleString()}</span>
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handlePurchaseCredit(credit.id)}
+                                disabled={purchasingCreditId === credit.id}
+                                className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 disabled:opacity-50 transition-colors duration-200"
+                              >
+                                {purchasingCreditId === credit.id ? 'Purchasing...' : 'Purchase'}
+                              </motion.button>
+                            </div>
+                          </motion.div>
+                        ))}
                       </div>
                     )}
-                    <div className="text-center">
-                      <h3 className="font-semibold text-gray-900">{pkg.name}</h3>
-                      <p className="text-2xl font-bold text-purple-600 mt-2">
-                        {pkg.credits} <span className="text-sm text-gray-600">credits</span>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">My EPR Credits</h3>
+                      <p className="text-gray-600 text-sm">
+                        Track and manage your purchased EPR credits with full digital trail
                       </p>
-                      <p className="text-gray-900 font-medium mt-1">₹{pkg.price.toLocaleString()}</p>
-                      <p className="text-xs text-gray-600 mt-2">{pkg.description}</p>
                     </div>
-                  </motion.div>
-                ))}
+
+                    {myCredits.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Award className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Credits Purchased</h3>
+                        <p className="text-gray-600">Purchase credits from the marketplace to see them here</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Credit
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Material
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Weight
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Price
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {myCredits.map((credit) => (
+                              <tr key={credit.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center">
+                                    <span className="text-lg mr-3">{credit.material_type === 'Plastic' ? '♻️' : credit.material_type === 'E-Waste' ? '🔌' : credit.material_type === 'Paper' ? '📄' : '🥬'}</span>
+                                    <div>
+                                      <div className="text-sm font-medium text-gray-900">{credit.description}</div>
+                                      <div className="text-sm text-gray-500">#{credit.id.slice(-8).toUpperCase()}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                                    {credit.material_type}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {credit.weight_kg} kg
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  ₹{credit.price.toLocaleString()}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => viewDigitalTrail(credit.id)}
+                                    className="text-purple-600 hover:text-purple-900 transition-colors duration-200"
+                                  >
+                                    View Digital Trail
+                                  </motion.button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
 
