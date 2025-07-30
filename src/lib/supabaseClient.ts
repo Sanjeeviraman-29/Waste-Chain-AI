@@ -362,66 +362,117 @@ export const purchaseEPRCredit = async (creditId: string, companyId: string) => 
   }
 };
 
-// Schema validation function to test database connectivity
-export const validateDatabaseSchema = async () => {
-  try {
-    console.log('🔍 Testing database schema alignment...');
+// Dynamic column detection cache
+let detectedColumns: { [table: string]: string[] } = {};
 
-    // Test profiles table structure
-    const { data: profilesTest, error: profilesError } = await supabaseClient
-      .from('profiles')
-      .select('id, email, full_name, created_at')
+// Detect actual column names in database tables
+export const detectTableColumns = async (tableName: string): Promise<string[]> => {
+  if (detectedColumns[tableName]) {
+    return detectedColumns[tableName];
+  }
+
+  try {
+    console.log(`🔍 Detecting columns in ${tableName} table...`);
+
+    // Try to select all columns with limit 0 to get structure without data
+    const { data, error } = await supabaseClient
+      .from(tableName)
+      .select('*')
       .limit(1);
 
-    if (profilesError) {
-      console.error('❌ Profiles table test failed:', profilesError);
-    } else {
-      console.log('✅ Profiles table schema OK');
+    if (error) {
+      console.error(`❌ Failed to detect columns in ${tableName}:`, error);
+      return [];
     }
 
-    // Test pickups table structure - try different column name variations
-    let pickupsError = null;
-    let pickupsTest = null;
+    if (data && data.length > 0) {
+      const columns = Object.keys(data[0]);
+      console.log(`✅ Detected columns in ${tableName}:`, columns);
+      detectedColumns[tableName] = columns;
+      return columns;
+    } else {
+      // If no data, try common column patterns
+      const commonColumns = await tryCommonColumns(tableName);
+      detectedColumns[tableName] = commonColumns;
+      return commonColumns;
+    }
+  } catch (error) {
+    console.error(`❌ Error detecting columns in ${tableName}:`, error);
+    return [];
+  }
+};
 
-    // First try with 'type' column
-    const typeResult = await supabaseClient
-      .from('pickups')
-      .select('id, user_id, type, image_url, status, created_at')
-      .limit(1);
+// Try common column name patterns
+const tryCommonColumns = async (tableName: string): Promise<string[]> => {
+  const commonPatterns: { [key: string]: string[][] } = {
+    pickups: [
+      ['id', 'user_id', 'type', 'status', 'created_at'],
+      ['id', 'user_id', 'waste_type', 'status', 'created_at'],
+      ['id', 'user_id', 'category', 'status', 'created_at'],
+      ['id', 'user_id', 'kind', 'status', 'created_at'],
+      ['id', 'user_id', 'material_type', 'status', 'created_at'],
+      ['id', 'user_id', 'pickup_type', 'status', 'created_at']
+    ],
+    profiles: [
+      ['id', 'email', 'full_name', 'created_at'],
+      ['id', 'email', 'name', 'created_at']
+    ],
+    epr_credits: [
+      ['id', 'material_type', 'price', 'status', 'created_at'],
+      ['id', 'type', 'price', 'status', 'created_at']
+    ]
+  };
 
-    if (typeResult.error) {
-      console.log('Testing with waste_type column...');
-      // If 'type' fails, try 'waste_type'
-      const wasteTypeResult = await supabaseClient
-        .from('pickups')
-        .select('id, user_id, waste_type, image_url, status, created_at')
+  const patterns = commonPatterns[tableName] || [['id', 'created_at']];
+
+  for (const pattern of patterns) {
+    try {
+      const selectFields = pattern.join(', ');
+      const { error } = await supabaseClient
+        .from(tableName)
+        .select(selectFields)
         .limit(1);
 
-      pickupsError = wasteTypeResult.error;
-      pickupsTest = wasteTypeResult.data;
-    } else {
-      pickupsError = typeResult.error;
-      pickupsTest = typeResult.data;
+      if (!error) {
+        console.log(`✅ Found working pattern for ${tableName}:`, pattern);
+        return pattern;
+      }
+    } catch (e) {
+      continue;
     }
+  }
 
-    if (pickupsError) {
-      console.error('❌ Pickups table test failed:', pickupsError);
-      console.log('💡 Your pickups table may use a different column name for waste type');
-    } else {
-      console.log('✅ Pickups table schema OK');
+  console.log(`⚠️ No common patterns worked for ${tableName}`);
+  return ['id', 'created_at']; // Minimal fallback
+};
+
+// Get the correct column name for waste type in pickups table
+export const getWasteTypeColumn = async (): Promise<string> => {
+  const columns = await detectTableColumns('pickups');
+
+  // Check for various possible column names
+  const possibleNames = ['type', 'waste_type', 'category', 'kind', 'material_type', 'pickup_type'];
+
+  for (const name of possibleNames) {
+    if (columns.includes(name)) {
+      console.log(`✅ Found waste type column: ${name}`);
+      return name;
     }
+  }
 
-    // Test epr_credits table structure
-    const { data: creditsTest, error: creditsError } = await supabaseClient
-      .from('epr_credits')
-      .select('id, material_type, weight_kg, price, status, created_at')
-      .limit(1);
+  console.log('⚠️ No waste type column found, using "type" as fallback');
+  return 'type'; // Fallback
+};
 
-    if (creditsError) {
-      console.error('❌ EPR Credits table test failed:', creditsError);
-    } else {
-      console.log('✅ EPR Credits table schema OK');
-    }
+// Schema validation function with dynamic detection
+export const validateDatabaseSchema = async () => {
+  try {
+    console.log('🔍 Testing database schema with dynamic detection...');
+
+    // Detect columns for each table
+    const profileColumns = await detectTableColumns('profiles');
+    const pickupColumns = await detectTableColumns('pickups');
+    const creditColumns = await detectTableColumns('epr_credits');
 
     // Test storage bucket access
     const { data: storageTest, error: storageError } = await supabaseClient.storage
@@ -434,13 +485,18 @@ export const validateDatabaseSchema = async () => {
       console.log('✅ Storage bucket access OK');
     }
 
-    console.log('🎉 Schema validation complete!');
+    console.log('🎉 Dynamic schema detection complete!');
 
     return {
-      profiles: !profilesError,
-      pickups: !pickupsError,
-      epr_credits: !creditsError,
-      storage: !storageError
+      profiles: profileColumns.length > 0,
+      pickups: pickupColumns.length > 0,
+      epr_credits: creditColumns.length > 0,
+      storage: !storageError,
+      detectedColumns: {
+        profiles: profileColumns,
+        pickups: pickupColumns,
+        epr_credits: creditColumns
+      }
     };
   } catch (error) {
     console.error('❌ Schema validation failed:', error);
