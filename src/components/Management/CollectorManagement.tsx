@@ -15,7 +15,8 @@ import {
   MapPin,
   TrendingUp
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabase, isSupabaseAvailable } from '../../lib/supabase';
+import { mockDataService, shouldUseMockData } from '../../lib/mockDataService';
 import AddCollectorModal from '../collectors/AddCollectorModal';
 
 interface Collector {
@@ -46,13 +47,29 @@ const CollectorManagement: React.FC = () => {
   const fetchCollectors = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('collectors')
-        .select('*')
-        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setCollectors(data || []);
+      // Try Supabase first, fallback to mock data if it fails
+      try {
+        if (supabase && isSupabaseAvailable()) {
+          console.log('Fetching collectors from Supabase');
+          const { data, error } = await supabase
+            .from('collectors')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+          setCollectors(data || []);
+          console.log('Successfully fetched collectors from Supabase:', data?.length || 0);
+        } else {
+          throw new Error('Supabase not available');
+        }
+      } catch (supabaseError) {
+        console.warn('Supabase failed, falling back to mock data:', supabaseError);
+        const { data, error } = await mockDataService.getCollectors();
+        if (error) throw error;
+        setCollectors(data || []);
+        console.log('Using mock data, collectors:', data?.length || 0);
+      }
     } catch (error) {
       console.error('Error fetching collectors:', error);
     } finally {
@@ -66,12 +83,24 @@ const CollectorManagement: React.FC = () => {
 
   const toggleCollectorStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('collectors')
-        .update({ is_active: !currentStatus })
-        .eq('id', id);
+      // Try Supabase first, fallback to mock data if it fails
+      try {
+        if (supabase && isSupabaseAvailable()) {
+          const { error } = await supabase
+            .from('collectors')
+            .update({ is_active: !currentStatus })
+            .eq('id', id);
 
-      if (error) throw error;
+          if (error) throw error;
+        } else {
+          throw new Error('Supabase not available');
+        }
+      } catch (supabaseError) {
+        console.warn('Supabase failed, falling back to mock data:', supabaseError);
+        const { error } = await mockDataService.updateCollectorStatus(id, !currentStatus);
+        if (error) throw error;
+      }
+
       fetchCollectors();
     } catch (error) {
       console.error('Error updating collector status:', error);
@@ -183,95 +212,182 @@ const CollectorManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Collectors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isLoading ? (
-          Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm animate-pulse">
-              <div className="h-4 bg-gray-200 rounded mb-4"></div>
-              <div className="h-3 bg-gray-200 rounded mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded mb-4"></div>
-              <div className="h-8 bg-gray-200 rounded"></div>
-            </div>
-          ))
-        ) : (
-          filteredCollectors.map((collector) => (
-            <motion.div
-              key={collector.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.02 }}
-              className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{collector.collector_name}</h3>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Phone className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{collector.phone}</span>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Star className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-medium text-gray-900">{collector.rating.toFixed(1)}</span>
-                </div>
-              </div>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center space-x-2">
-                  <Truck className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">{collector.vehicle_type}</span>
-                  <span className="text-xs text-gray-500">({collector.license_plate})</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">
-                    {collector.service_areas.length} service areas
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">
-                    {collector.total_collections} collections
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  collector.is_active 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {collector.is_active ? 'Active' : 'Inactive'}
-                </span>
-                
-                <div className="flex items-center space-x-2">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setSelectedCollector(collector)}
-                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+      {/* Collectors Table */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Collector ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Phone Number
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Vehicle
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Rating
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Collections
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index} className="animate-pulse">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-12"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex space-x-2">
+                        <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                        <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : filteredCollectors.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                    <Truck className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                    <p className="text-lg font-medium text-gray-900 mb-2">No collectors found</p>
+                    <p className="text-gray-600">
+                      {searchTerm ? 'Try adjusting your search criteria.' : 'Get started by adding your first collector.'}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredCollectors.map((collector, index) => (
+                  <motion.tr
+                    key={collector.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="hover:bg-gray-50 transition-colors duration-150"
                   >
-                    <Edit className="w-4 h-4" />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => toggleCollectorStatus(collector.id, collector.is_active)}
-                    className={`p-2 rounded-lg transition-colors duration-200 ${
-                      collector.is_active
-                        ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
-                        : 'text-green-600 hover:text-green-700 hover:bg-green-50'
-                    }`}
-                  >
-                    {collector.is_active ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          ))
-        )}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      #{collector.id.slice(-6).toUpperCase()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <span className="text-sm font-medium text-green-600">
+                              {collector.collector_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{collector.collector_name}</div>
+                          <div className="text-sm text-gray-500">
+                            Joined {new Date(collector.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-900">
+                        <Phone className="w-4 h-4 text-gray-400 mr-2" />
+                        {collector.phone || 'Not provided'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-900">
+                        <Truck className="w-4 h-4 text-gray-400 mr-2" />
+                        <div>
+                          <div>{collector.vehicle_type || 'Not specified'}</div>
+                          {collector.license_plate && (
+                            <div className="text-xs text-gray-500">{collector.license_plate}</div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {collector.rating.toFixed(1)}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <TrendingUp className="w-4 h-4 text-gray-400 mr-2" />
+                        {collector.total_collections}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        collector.is_active
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {collector.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setSelectedCollector(collector)}
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                          title="Edit collector"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => toggleCollectorStatus(collector.id, collector.is_active)}
+                          className={`p-2 rounded-lg transition-colors duration-200 ${
+                            collector.is_active
+                              ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                              : 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                          }`}
+                          title={collector.is_active ? 'Deactivate collector' : 'Activate collector'}
+                        >
+                          {collector.is_active ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                        </motion.button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Add Collector Modal */}

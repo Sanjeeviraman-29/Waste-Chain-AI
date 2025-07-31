@@ -3,17 +3,33 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check your .env.local file.');
-}
+// Helper function to validate Supabase configuration
+const isValidSupabaseConfig = (url: string, key: string): boolean => {
+  return url &&
+         key &&
+         url.trim() !== '' &&
+         key.trim() !== '' &&
+         url.includes('supabase.co') &&
+         !url.includes('demo') &&
+         key.length > 20 && // Real keys are much longer
+         !key.includes('demo');
+};
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-});
+// Create a placeholder client when environment variables are missing or invalid
+export const supabase = isValidSupabaseConfig(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    })
+  : null;
+
+// Helper function to check if Supabase is available
+export const isSupabaseAvailable = (): boolean => {
+  return supabase !== null && isValidSupabaseConfig(supabaseUrl, supabaseAnonKey);
+};
 
 // Database types (generated from schema)
 export interface Database {

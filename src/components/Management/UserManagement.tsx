@@ -14,7 +14,7 @@ import {
   Plus,
   Minus
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabaseClient } from '../../lib/supabaseClient';
 
 interface User {
   id: string;
@@ -46,7 +46,7 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
